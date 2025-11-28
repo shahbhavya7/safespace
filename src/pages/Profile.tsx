@@ -9,14 +9,14 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Shield, User, Phone, Mail, MapPin, ArrowLeft, Edit, Save, Heart, ShieldCheck, LogOut, Users, Plus, Trash2, AlertCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { apiCall } from '@/lib/api';
-import { userService } from '@/lib/services';
+import { useAuth } from '@/contexts/AuthContext';
+import { getTrustedContacts, addTrustedContact, deleteTrustedContact, updateUserProfile, getUserProfile } from '@/lib/supabase';
 
 export default function Profile() {
   const navigate = useNavigate();
+  const { user, signOut, loading } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [showPreferencesSetup, setShowPreferencesSetup] = useState(false);
   const [trustedContacts, setTrustedContacts] = useState<any[]>([]);
   const [showAddContact, setShowAddContact] = useState(false);
   const [newContact, setNewContact] = useState({
@@ -26,23 +26,22 @@ export default function Profile() {
   });
   
   const [profile, setProfile] = useState({
-    id: 0,
-    name: '',
     first_name: '',
     last_name: '',
     hostel: '',
     phone: '',
-    email: '',
     introduction: '',
-    profile_picture: '',
-    oauth_provider: '',
     preferences: [] as string[]
   });
 
+  // Get user info from Supabase auth
+  const userName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || '';
+  const userEmail = user?.email || '';
+  const userAvatar = user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '';
+  const userInitials = userName ? userName.split(' ').map((n: string) => n[0]).join('').toUpperCase() : 'U';
+
   useEffect(() => {
-    // Load user from localStorage
-    const storedUser = localStorage.getItem('user');
-    if (!storedUser) {
+    if (!loading && !user) {
       toast.error('Not Logged In', {
         description: 'Please log in to view your profile'
       });
@@ -50,40 +49,42 @@ export default function Profile() {
       return;
     }
 
-    try {
-      const user = JSON.parse(storedUser);
-      setProfile({
-        id: user.id,
-        name: `${user.first_name} ${user.last_name}`,
-        first_name: user.first_name || '',
-        last_name: user.last_name || '',
-        hostel: user.hostel || '',
-        phone: user.phone || '',
-        email: user.email || '',
-        introduction: user.introduction || '',
-        profile_picture: user.profile_picture || '',
-        oauth_provider: user.oauth_provider || '',
-        preferences: user.preferences || []
-      });
-
-      // Show preferences setup if this is a new Google OAuth user with no preferences
-      if (user.oauth_provider === 'google' && (!user.preferences || user.preferences.length === 0)) {
-        setShowPreferencesSetup(true);
-      }
-
-      // Load trusted contacts
+    if (user) {
+      const nameParts = userName.split(' ');
+      setProfile(prev => ({
+        ...prev,
+        first_name: nameParts[0] || '',
+        last_name: nameParts.slice(1).join(' ') || '',
+      }));
       loadTrustedContacts();
-    } catch (e) {
-      console.error('Failed to parse user data:', e);
-      navigate('/login');
+      loadProfileData();
     }
-  }, [navigate]);
+  }, [user, loading, navigate]);
+
+  const loadProfileData = async () => {
+    if (!user) return;
+    try {
+      const { data } = await getUserProfile(user.id);
+      if (data) {
+        setProfile(prev => ({
+          ...prev,
+          hostel: data.hostel || '',
+          phone: data.phone || '',
+          introduction: data.introduction || '',
+          preferences: data.preferences || [],
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to load profile:', error);
+    }
+  };
 
   const loadTrustedContacts = async () => {
+    if (!user) return;
     try {
-      const response = await userService.getTrustedContacts();
-      if (response.success) {
-        setTrustedContacts(response.contacts || []);
+      const { data, error } = await getTrustedContacts(user.id);
+      if (!error) {
+        setTrustedContacts(data || []);
       }
     } catch (error) {
       console.error('Failed to load trusted contacts:', error);
@@ -98,68 +99,52 @@ export default function Profile() {
       return;
     }
 
-    // Check if user is logged in
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      toast.error('Not Logged In', {
-        description: 'Please log in to add trusted contacts'
-      });
+    if (!user) {
+      toast.error('Not Logged In');
       navigate('/login');
       return;
     }
 
     setIsLoading(true);
     try {
-      const response = await userService.addTrustedContact(
-        newContact.name,
-        newContact.email,
-        newContact.phone
-      );
+      const { error } = await addTrustedContact(user.id, {
+        name: newContact.name,
+        phone: newContact.phone,
+        email: newContact.email || undefined,
+      });
 
-      if (response.success) {
-        toast.success('Contact Added!', {
-          description: `${newContact.name} has been added to your trusted contacts`
-        });
-        setNewContact({ name: '', email: '', phone: '' });
-        setShowAddContact(false);
-        loadTrustedContacts();
-      } else {
-        throw new Error(response.message || 'Failed to add contact');
-      }
+      if (error) throw error;
+
+      toast.success('Contact Added!', {
+        description: `${newContact.name} has been added to your trusted contacts`
+      });
+      setNewContact({ name: '', email: '', phone: '' });
+      setShowAddContact(false);
+      loadTrustedContacts();
     } catch (error: any) {
       console.error('Add contact error:', error);
       toast.error('Failed to Add Contact', {
-        description: error.message || 'Could not add trusted contact. Please try logging in again.'
+        description: error.message || 'Could not add trusted contact'
       });
-      
-      // If authentication error, redirect to login
-      if (error.message && error.message.includes('authentication')) {
-        setTimeout(() => navigate('/login'), 2000);
-      }
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleDeleteContact = async (contactId: number, contactName: string) => {
+  const handleDeleteContact = async (contactId: string, contactName: string) => {
     if (!confirm(`Are you sure you want to remove ${contactName} from your trusted contacts?`)) {
       return;
     }
 
     try {
-      const response = await apiCall('user.php?action=delete-contact', {
-        method: 'POST',
-        body: { contact_id: contactId }
-      });
+      const { error } = await deleteTrustedContact(contactId);
 
-      if (response.success) {
-        toast.success('Contact Removed', {
-          description: `${contactName} has been removed from your trusted contacts`
-        });
-        loadTrustedContacts();
-      } else {
-        throw new Error(response.message || 'Failed to delete contact');
-      }
+      if (error) throw error;
+
+      toast.success('Contact Removed', {
+        description: `${contactName} has been removed from your trusted contacts`
+      });
+      loadTrustedContacts();
     } catch (error: any) {
       toast.error('Failed to Remove Contact', {
         description: error.message || 'Could not remove trusted contact'
@@ -168,41 +153,25 @@ export default function Profile() {
   };
 
   const handleSave = async () => {
+    if (!user) return;
+    
     setIsLoading(true);
     try {
-      const response = await apiCall('user.php?action=update', {
-        method: 'POST',
-        body: {
-          first_name: profile.first_name,
-          last_name: profile.last_name,
-          hostel: profile.hostel,
-          phone: profile.phone,
-          introduction: profile.introduction,
-          preferences: profile.preferences
-        }
+      const { error } = await updateUserProfile(user.id, {
+        first_name: profile.first_name,
+        last_name: profile.last_name,
+        hostel: profile.hostel,
+        phone: profile.phone,
+        introduction: profile.introduction,
+        preferences: profile.preferences,
       });
 
-      if (response.success) {
-        // Update localStorage
-        const updatedUser = {
-          ...JSON.parse(localStorage.getItem('user') || '{}'),
-          first_name: profile.first_name,
-          last_name: profile.last_name,
-          hostel: profile.hostel,
-          phone: profile.phone,
-          introduction: profile.introduction,
-          preferences: profile.preferences
-        };
-        localStorage.setItem('user', JSON.stringify(updatedUser));
+      if (error) throw error;
 
-        toast.success('Profile Updated', {
-          description: 'Your profile has been saved successfully'
-        });
-        setIsEditing(false);
-        setShowPreferencesSetup(false);
-      } else {
-        throw new Error(response.message || 'Failed to update profile');
-      }
+      toast.success('Profile Updated', {
+        description: 'Your profile has been saved successfully'
+      });
+      setIsEditing(false);
     } catch (error: any) {
       toast.error('Update Failed', {
         description: error.message || 'Could not save your profile'
@@ -221,21 +190,21 @@ export default function Profile() {
     }));
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('user');
+  const handleLogout = async () => {
+    await signOut();
     toast.success('Logged Out', {
       description: 'You have been logged out successfully'
     });
     navigate('/');
   };
 
-  const getInitials = () => {
-    if (profile.first_name && profile.last_name) {
-      return `${profile.first_name[0]}${profile.last_name[0]}`;
-    }
-    return profile.email?.[0]?.toUpperCase() || 'U';
-  };
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-blue-50">
@@ -260,44 +229,28 @@ export default function Profile() {
       </nav>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Welcome Message for New Google Users */}
-        {showPreferencesSetup && (
-          <Card className="mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-            <CardHeader>
-              <CardTitle className="text-2xl text-blue-900">
-                🎉 Welcome to SafeSpace, {profile.first_name}!
-              </CardTitle>
-              <CardDescription className="text-base text-blue-700">
-                Let's personalize your experience. Tell us more about yourself and select your preferences below.
-              </CardDescription>
-            </CardHeader>
-          </Card>
-        )}
-
         {/* Profile Header */}
         <Card className="mb-8">
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4">
               <Avatar className="w-24 h-24 border-4 border-white shadow-lg">
-                <AvatarImage src={profile.profile_picture} alt={profile.name} />
+                <AvatarImage src={userAvatar} alt={userName} />
                 <AvatarFallback className="text-2xl bg-blue-100 text-blue-600">
-                  {getInitials()}
+                  {userInitials}
                 </AvatarFallback>
               </Avatar>
             </div>
             <CardTitle className="text-3xl text-gray-900">
-              {profile.name || profile.email}
+              {userName || userEmail}
             </CardTitle>
-            {profile.oauth_provider && (
-              <Badge variant="secondary" className="mt-2">
-                <img 
-                  src={`https://www.google.com/favicon.ico`} 
-                  alt="Google" 
-                  className="w-4 h-4 mr-2"
-                />
-                Connected with Google
-              </Badge>
-            )}
+            <Badge variant="secondary" className="mt-2">
+              <img 
+                src="https://www.google.com/favicon.ico" 
+                alt="Google" 
+                className="w-4 h-4 mr-2"
+              />
+              Connected with Google
+            </Badge>
             {profile.hostel && (
               <CardDescription className="text-lg flex items-center justify-center space-x-2 mt-2">
                 <MapPin className="h-5 w-5 text-gray-500" />
@@ -315,10 +268,9 @@ export default function Profile() {
                 <User className="h-6 w-6 text-blue-600" />
                 <span>Contact Information</span>
               </span>
-              {!showPreferencesSetup && (
-                <Button
-                  variant="outline"
-                  size="sm"
+              <Button
+                variant="outline"
+                size="sm"
                   onClick={() => isEditing ? handleSave() : setIsEditing(true)}
                   disabled={isLoading}
                 >
@@ -553,16 +505,16 @@ export default function Profile() {
                         <User className="h-6 w-6 text-purple-600" />
                       </div>
                       <div>
-                        <h4 className="font-semibold text-gray-900">{contact.contact_name}</h4>
+                        <h4 className="font-semibold text-gray-900">{contact.name}</h4>
                         <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
                           <span className="flex items-center">
                             <Phone className="h-3 w-3 mr-1" />
-                            {contact.contact_phone}
+                            {contact.phone}
                           </span>
-                          {contact.contact_email && (
+                          {contact.email && (
                             <span className="flex items-center">
                               <Mail className="h-3 w-3 mr-1" />
-                              {contact.contact_email}
+                              {contact.email}
                             </span>
                           )}
                         </div>
@@ -572,7 +524,7 @@ export default function Profile() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => window.open(`tel:${contact.contact_phone}`)}
+                        onClick={() => window.open(`tel:${contact.phone}`)}
                       >
                         <Phone className="h-4 w-4 mr-2" />
                         Call
@@ -581,7 +533,7 @@ export default function Profile() {
                         variant="ghost"
                         size="sm"
                         className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                        onClick={() => handleDeleteContact(contact.id, contact.contact_name)}
+                        onClick={() => handleDeleteContact(contact.id, contact.name)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>

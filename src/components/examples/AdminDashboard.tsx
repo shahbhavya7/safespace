@@ -15,7 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { adminService } from '@/lib/services';
 
 interface User {
-  id: number;
+  id: string;
   email: string;
   first_name: string;
   last_name: string;
@@ -23,6 +23,7 @@ interface User {
   hostel?: string;
   oauth_provider?: string;
   oauth_profile_image?: string;
+  avatar_url?: string;
   introduction?: string;
   preferences?: string[];
   emergency_contact_name?: string;
@@ -125,7 +126,7 @@ export default function AdminDashboard() {
   };
 
   // Load user details
-  const loadUserDetails = async (userId: number) => {
+  const loadUserDetails = async (userId: string) => {
     setIsLoading(true);
     console.log('🔵 Loading user details for user ID:', userId);
     try {
@@ -361,9 +362,9 @@ export default function AdminDashboard() {
                             <TableCell className="font-medium">{user.email}</TableCell>
                             <TableCell>
                               <div className="flex items-center gap-2">
-                                {user.oauth_profile_image && (
+                                {(user.avatar_url || user.oauth_profile_image) && (
                                   <img 
-                                    src={user.oauth_profile_image} 
+                                    src={user.avatar_url || user.oauth_profile_image} 
                                     alt={user.first_name}
                                     className="w-6 h-6 rounded-full"
                                   />
@@ -444,10 +445,10 @@ export default function AdminDashboard() {
                     {/* User Info */}
                     <TabsContent value="info" className="space-y-4">
                       {/* Profile Header with Image */}
-                      {selectedUser.user.oauth_profile_image && (
+                      {(selectedUser.user.avatar_url || selectedUser.user.oauth_profile_image) && (
                         <div className="flex items-center gap-4 pb-4 border-b">
                           <img 
-                            src={selectedUser.user.oauth_profile_image} 
+                            src={selectedUser.user.avatar_url || selectedUser.user.oauth_profile_image} 
                             alt={`${selectedUser.user.first_name} ${selectedUser.user.last_name}`}
                             className="w-20 h-20 rounded-full border-2 border-blue-500"
                           />
@@ -809,9 +810,9 @@ export default function AdminDashboard() {
                     <div key={user.id} className="p-4 border rounded-lg hover:bg-gray-50 transition">
                       <div className="flex items-start justify-between">
                         <div className="flex items-start gap-3">
-                          {user.oauth_profile_image && (
+                          {(user.avatar_url || user.oauth_profile_image) && (
                             <img 
-                              src={user.oauth_profile_image} 
+                              src={user.avatar_url || user.oauth_profile_image} 
                               alt={user.first_name}
                               className="w-10 h-10 rounded-full"
                             />

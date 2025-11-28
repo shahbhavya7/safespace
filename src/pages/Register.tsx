@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { Shield, Mail, Lock, User } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { apiCall } from '@/lib/api';
+import { authService } from '@/lib/services';
 import GoogleAuthButton from '@/components/ui/google-auth-button';
 
 export default function Register() {
@@ -49,27 +49,20 @@ export default function Register() {
     setIsLoading(true);
 
     try {
-      const response = await apiCall('auth.php?action=register', {
-        method: 'POST',
-        requiresAuth: false,
-        body: {
-          email: formData.email,
-          password: formData.password,
-          first_name: formData.firstName,
-          last_name: formData.lastName,
-        }
-      });
+      const response = await authService.register(
+        formData.email,
+        formData.password,
+        formData.firstName,
+        formData.lastName
+      );
 
       if (response.success) {
-        localStorage.setItem('authToken', response.token);
-        localStorage.setItem('user', JSON.stringify(response.user));
-        
         toast({
           title: "✅ Account Created!",
-          description: "Welcome to SafeSpace!",
+          description: "Welcome to SafeSpace! Please check your email to verify your account.",
         });
         
-        navigate('/');
+        navigate('/login');
       } else {
         throw new Error(response.message || 'Registration failed');
       }

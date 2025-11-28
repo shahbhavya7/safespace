@@ -28,6 +28,8 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { toast } from 'sonner';
 import { sosService, userService } from '@/lib/services';
+import { useAuth } from '@/contexts/AuthContext';
+import { NODE_API_URL } from '@/lib/api';
 
 // Fix default marker issue
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -86,6 +88,9 @@ async function getORSRoute(
 }
 
 export default function SafetyHub() {
+  // Get auth context
+  const { user } = useAuth();
+
   // --- Emergency SOS (Automated Call & SMS) ---
   const [sosActive, setSosActive] = useState(false);
   const [isCallingEmergency, setIsCallingEmergency] = useState(false);
@@ -126,9 +131,8 @@ export default function SafetyHub() {
     setIsCallingEmergency(true);
 
     try {
-      // Check if user is logged in
-      const token = localStorage.getItem('authToken');
-      if (!token) {
+      // Check if user is logged in using Supabase auth
+      if (!user) {
         toast.error('Not Logged In', {
           description: 'Please log in to use SOS features.',
         });
@@ -147,8 +151,9 @@ export default function SafetyHub() {
         return;
       }
 
+      // Get phone numbers - use 'phone' field from Supabase
       const phoneNumbers = trustedContacts
-        .map(contact => contact.contact_phone)
+        .map(contact => contact.phone)
         .filter(phone => phone);
 
       if (phoneNumbers.length === 0) {
@@ -211,7 +216,7 @@ export default function SafetyHub() {
 
       // Notify trusted contacts with call and SMS
       try {
-        const response = await fetch('http://localhost:5001/api/emergency/notify-contacts', {
+        const response = await fetch(`${NODE_API_URL}/emergency/notify-contacts`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -266,9 +271,9 @@ export default function SafetyHub() {
         return;
       }
 
-      // Extract phone numbers from trusted contacts
+      // Extract phone numbers from trusted contacts - use 'phone' field
       const phoneNumbers = trustedContacts
-        .map(contact => contact.contact_phone)
+        .map(contact => contact.phone)
         .filter(phone => phone); // Filter out empty phone numbers
 
       if (phoneNumbers.length === 0) {
@@ -285,7 +290,7 @@ export default function SafetyHub() {
           const { latitude, longitude } = pos.coords;
 
           try {
-            const response = await fetch('http://localhost:5001/api/location/share/start', {
+            const response = await fetch(`${NODE_API_URL}/location/share/start`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -321,7 +326,7 @@ export default function SafetyHub() {
             // Send SMS update every 5 location updates (to avoid spam)
             if (locationUpdateCount.current % 5 === 0) {
               try {
-                await fetch('http://localhost:5001/api/location/update', {
+                await fetch(`${NODE_API_URL}/location/update`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
@@ -354,13 +359,13 @@ export default function SafetyHub() {
         watchIdRef.current = null;
       }
 
-      // Extract phone numbers for stop notification
+      // Extract phone numbers for stop notification - use 'phone' field
       const phoneNumbers = trustedContacts
-        .map(contact => contact.contact_phone)
+        .map(contact => contact.phone)
         .filter(phone => phone);
 
       // Send stop notification
-      fetch('http://localhost:5001/api/location/share/stop', {
+      fetch(`${NODE_API_URL}/location/share/stop`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

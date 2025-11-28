@@ -6,9 +6,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Shield, Heart, ArrowLeft, Play, Pause } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { moodService } from '@/lib/services';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 export default function WellnessHub() {
+  const { user } = useAuth();
   const [currentMood, setCurrentMood] = useState([5]);
   const [moodNote, setMoodNote] = useState('');
   const [breathingActive, setBreathingActive] = useState(false);
@@ -56,9 +58,8 @@ export default function WellnessHub() {
   const saveMoodLog = async () => {
     setIsSaving(true);
     try {
-      // Check if user is logged in
-      const token = localStorage.getItem('authToken');
-      if (!token) {
+      // Check if user is logged in using Supabase auth
+      if (!user) {
         toast.error('Not Logged In', {
           description: 'Please log in to save your mood.',
         });

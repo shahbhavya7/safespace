@@ -1,23 +1,27 @@
-// API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
-export const NODE_API_URL = import.meta.env.VITE_NODE_API_URL || 'http://localhost:5001/api';
+// API Configuration for Node.js/Twilio backend
+// PHP backend has been replaced with Supabase - see services.ts
 
-// Store token in localStorage
+// Node.js backend URL for Twilio/SMS functionality
+export const NODE_API_URL =
+  import.meta.env.VITE_NODE_API_URL || "/api";
+
+// Legacy exports for backward compatibility
 export const setAuthToken = (token: string) => {
-  localStorage.setItem('authToken', token);
+  localStorage.setItem("authToken", token);
 };
 
 export const getAuthToken = (): string | null => {
-  return localStorage.getItem('authToken');
+  return localStorage.getItem("authToken");
 };
 
 export const clearAuthToken = () => {
-  localStorage.removeItem('authToken');
+  localStorage.removeItem("authToken");
 };
 
-// API Request Helper
+// Legacy apiCall function - kept for any remaining references
+// All new code should use Supabase directly via services.ts
 interface RequestOptions {
-  method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
+  method?: "GET" | "POST" | "PUT" | "DELETE";
   body?: any;
   requiresAuth?: boolean;
   customHeaders?: Record<string, string>;
@@ -27,25 +31,18 @@ export const apiCall = async (
   endpoint: string,
   options: RequestOptions = {}
 ) => {
+  console.warn('apiCall is deprecated. Use Supabase services from services.ts instead.');
+  
   const {
-    method = 'GET',
+    method = "GET",
     body = null,
-    requiresAuth = true,
     customHeaders = {},
   } = options;
 
   const headers: HeadersInit = {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
     ...customHeaders,
   };
-
-  if (requiresAuth) {
-    const token = getAuthToken();
-    if (!token) {
-      throw new Error('No authentication token found');
-    }
-    headers['Authorization'] = `Bearer ${token}`;
-  }
 
   const config: RequestInit = {
     method,
@@ -57,22 +54,12 @@ export const apiCall = async (
   }
 
   try {
-    const response = await fetch(`${API_BASE_URL}/${endpoint}`, config);
-
-    if (!response.ok) {
-      if (response.status === 401) {
-        clearAuthToken();
-        // Do not redirect; let the caller handle unauthorized error
-      }
-      const error = await response.json();
-      throw new Error(error.message || 'API request failed');
-    }
-
+    const response = await fetch(`${NODE_API_URL}/${endpoint}`, config);
     return await response.json();
   } catch (error) {
-    console.error('API Error:', error);
+    console.error("API Error:", error);
     throw error;
   }
 };
 
-export default API_BASE_URL;
+export default NODE_API_URL;

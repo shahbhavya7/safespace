@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MessageCircle, X, Send, Smile, Frown, Meh, Bot, User } from 'lucide-react';
 import { toast } from 'sonner';
+import { NODE_API_URL } from '@/lib/api';
 
 interface Message {
   id: string;
@@ -102,7 +103,7 @@ export default function ChatbotAssistant() {
 
     try {
       // Call chatbot API
-      const response = await fetch('http://localhost:5001/api/chatbot', {
+      const response = await fetch(`${NODE_API_URL}/chatbot`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
