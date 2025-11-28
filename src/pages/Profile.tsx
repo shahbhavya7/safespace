@@ -1,16 +1,44 @@
-import { Link, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Shield, User, Phone, Mail, MapPin, ArrowLeft, Edit, Save, Heart, ShieldCheck, LogOut, Users, Plus, Trash2, AlertCircle } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import { toast } from 'sonner';
-import { useAuth } from '@/contexts/AuthContext';
-import { getTrustedContacts, addTrustedContact, deleteTrustedContact, updateUserProfile, getUserProfile } from '@/lib/supabase';
+import { Link, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Shield,
+  User,
+  Phone,
+  Mail,
+  MapPin,
+  ArrowLeft,
+  Edit,
+  Save,
+  Heart,
+  ShieldCheck,
+  LogOut,
+  Users,
+  Plus,
+  Trash2,
+  AlertCircle,
+} from "lucide-react";
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  getTrustedContacts,
+  addTrustedContact,
+  deleteTrustedContact,
+  updateUserProfile,
+  getUserProfile,
+} from "@/lib/supabase";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -20,41 +48,52 @@ export default function Profile() {
   const [trustedContacts, setTrustedContacts] = useState<any[]>([]);
   const [showAddContact, setShowAddContact] = useState(false);
   const [newContact, setNewContact] = useState({
-    name: '',
-    email: '',
-    phone: ''
+    name: "",
+    email: "",
+    phone: "",
   });
-  
+
   const [profile, setProfile] = useState({
-    first_name: '',
-    last_name: '',
-    hostel: '',
-    phone: '',
-    introduction: '',
-    preferences: [] as string[]
+    first_name: "",
+    last_name: "",
+    hostel: "",
+    phone: "",
+    introduction: "",
+    preferences: [] as string[],
   });
 
   // Get user info from Supabase auth
-  const userName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || '';
-  const userEmail = user?.email || '';
-  const userAvatar = user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '';
-  const userInitials = userName ? userName.split(' ').map((n: string) => n[0]).join('').toUpperCase() : 'U';
+  const userName =
+    user?.user_metadata?.full_name ||
+    user?.user_metadata?.name ||
+    user?.email?.split("@")[0] ||
+    "";
+  const userEmail = user?.email || "";
+  const userAvatar =
+    user?.user_metadata?.avatar_url || user?.user_metadata?.picture || "";
+  const userInitials = userName
+    ? userName
+        .split(" ")
+        .map((n: string) => n[0])
+        .join("")
+        .toUpperCase()
+    : "U";
 
   useEffect(() => {
     if (!loading && !user) {
-      toast.error('Not Logged In', {
-        description: 'Please log in to view your profile'
+      toast.error("Not Logged In", {
+        description: "Please log in to view your profile",
       });
-      navigate('/login');
+      navigate("/login");
       return;
     }
 
     if (user) {
-      const nameParts = userName.split(' ');
-      setProfile(prev => ({
+      const nameParts = userName.split(" ");
+      setProfile((prev) => ({
         ...prev,
-        first_name: nameParts[0] || '',
-        last_name: nameParts.slice(1).join(' ') || '',
+        first_name: nameParts[0] || "",
+        last_name: nameParts.slice(1).join(" ") || "",
       }));
       loadTrustedContacts();
       loadProfileData();
@@ -66,16 +105,16 @@ export default function Profile() {
     try {
       const { data } = await getUserProfile(user.id);
       if (data) {
-        setProfile(prev => ({
+        setProfile((prev) => ({
           ...prev,
-          hostel: data.hostel || '',
-          phone: data.phone || '',
-          introduction: data.introduction || '',
+          hostel: data.hostel || "",
+          phone: data.phone || "",
+          introduction: data.introduction || "",
           preferences: data.preferences || [],
         }));
       }
     } catch (error) {
-      console.error('Failed to load profile:', error);
+      console.error("Failed to load profile:", error);
     }
   };
 
@@ -87,21 +126,21 @@ export default function Profile() {
         setTrustedContacts(data || []);
       }
     } catch (error) {
-      console.error('Failed to load trusted contacts:', error);
+      console.error("Failed to load trusted contacts:", error);
     }
   };
 
   const handleAddContact = async () => {
     if (!newContact.name || !newContact.phone) {
-      toast.error('Missing Information', {
-        description: 'Please provide at least name and phone number'
+      toast.error("Missing Information", {
+        description: "Please provide at least name and phone number",
       });
       return;
     }
 
     if (!user) {
-      toast.error('Not Logged In');
-      navigate('/login');
+      toast.error("Not Logged In");
+      navigate("/login");
       return;
     }
 
@@ -115,24 +154,31 @@ export default function Profile() {
 
       if (error) throw error;
 
-      toast.success('Contact Added!', {
-        description: `${newContact.name} has been added to your trusted contacts`
+      toast.success("Contact Added!", {
+        description: `${newContact.name} has been added to your trusted contacts`,
       });
-      setNewContact({ name: '', email: '', phone: '' });
+      setNewContact({ name: "", email: "", phone: "" });
       setShowAddContact(false);
       loadTrustedContacts();
     } catch (error: any) {
-      console.error('Add contact error:', error);
-      toast.error('Failed to Add Contact', {
-        description: error.message || 'Could not add trusted contact'
+      console.error("Add contact error:", error);
+      toast.error("Failed to Add Contact", {
+        description: error.message || "Could not add trusted contact",
       });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleDeleteContact = async (contactId: string, contactName: string) => {
-    if (!confirm(`Are you sure you want to remove ${contactName} from your trusted contacts?`)) {
+  const handleDeleteContact = async (
+    contactId: string,
+    contactName: string
+  ) => {
+    if (
+      !confirm(
+        `Are you sure you want to remove ${contactName} from your trusted contacts?`
+      )
+    ) {
       return;
     }
 
@@ -141,20 +187,20 @@ export default function Profile() {
 
       if (error) throw error;
 
-      toast.success('Contact Removed', {
-        description: `${contactName} has been removed from your trusted contacts`
+      toast.success("Contact Removed", {
+        description: `${contactName} has been removed from your trusted contacts`,
       });
       loadTrustedContacts();
     } catch (error: any) {
-      toast.error('Failed to Remove Contact', {
-        description: error.message || 'Could not remove trusted contact'
+      toast.error("Failed to Remove Contact", {
+        description: error.message || "Could not remove trusted contact",
       });
     }
   };
 
   const handleSave = async () => {
     if (!user) return;
-    
+
     setIsLoading(true);
     try {
       const { error } = await updateUserProfile(user.id, {
@@ -168,13 +214,13 @@ export default function Profile() {
 
       if (error) throw error;
 
-      toast.success('Profile Updated', {
-        description: 'Your profile has been saved successfully'
+      toast.success("Profile Updated", {
+        description: "Your profile has been saved successfully",
       });
       setIsEditing(false);
     } catch (error: any) {
-      toast.error('Update Failed', {
-        description: error.message || 'Could not save your profile'
+      toast.error("Update Failed", {
+        description: error.message || "Could not save your profile",
       });
     } finally {
       setIsLoading(false);
@@ -182,20 +228,20 @@ export default function Profile() {
   };
 
   const togglePreference = (preference: string) => {
-    setProfile(prev => ({
+    setProfile((prev) => ({
       ...prev,
       preferences: prev.preferences.includes(preference)
-        ? prev.preferences.filter(p => p !== preference)
-        : [...prev.preferences, preference]
+        ? prev.preferences.filter((p) => p !== preference)
+        : [...prev.preferences, preference],
     }));
   };
 
   const handleLogout = async () => {
     await signOut();
-    toast.success('Logged Out', {
-      description: 'You have been logged out successfully'
+    toast.success("Logged Out", {
+      description: "You have been logged out successfully",
     });
-    navigate('/');
+    navigate("/");
   };
 
   if (loading) {
@@ -215,10 +261,14 @@ export default function Profile() {
             <Link to="/" className="flex items-center space-x-2">
               <ArrowLeft className="h-5 w-5 text-gray-600" />
               <Shield className="h-8 w-8 text-blue-600" />
-              <span className="text-2xl font-bold text-gray-900">SafeSpace</span>
+              <span className="text-2xl font-bold text-gray-900">
+                SafeSpace
+              </span>
             </Link>
             <div className="flex items-center space-x-4">
-              <h1 className="text-xl font-semibold text-gray-900">User Profile</h1>
+              <h1 className="text-xl font-semibold text-gray-900">
+                User Profile
+              </h1>
               <Button variant="outline" size="sm" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />
                 Logout
@@ -244,9 +294,9 @@ export default function Profile() {
               {userName || userEmail}
             </CardTitle>
             <Badge variant="secondary" className="mt-2">
-              <img 
-                src="https://www.google.com/favicon.ico" 
-                alt="Google" 
+              <img
+                src="https://www.google.com/favicon.ico"
+                alt="Google"
                 className="w-4 h-4 mr-2"
               />
               Connected with Google
@@ -271,13 +321,13 @@ export default function Profile() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => isEditing ? handleSave() : setIsEditing(true)}
+                onClick={() => (isEditing ? handleSave() : setIsEditing(true))}
                 disabled={isLoading}
               >
                 {isEditing ? (
                   <>
                     <Save className="h-4 w-4 mr-2" />
-                    {isLoading ? 'Saving...' : 'Save Changes'}
+                    {isLoading ? "Saving..." : "Save Changes"}
                   </>
                 ) : (
                   <>
@@ -297,11 +347,19 @@ export default function Profile() {
                     <Input
                       id="first_name"
                       value={profile.first_name}
-                      onChange={(e) => setProfile(prev => ({ ...prev, first_name: e.target.value, name: `${e.target.value} ${prev.last_name}` }))}
+                      onChange={(e) =>
+                        setProfile((prev) => ({
+                          ...prev,
+                          first_name: e.target.value,
+                          name: `${e.target.value} ${prev.last_name}`,
+                        }))
+                      }
                       placeholder="Enter your first name"
                     />
                   ) : (
-                    <p className="text-lg font-semibold text-gray-900">{profile.first_name || 'Not set'}</p>
+                    <p className="text-lg font-semibold text-gray-900">
+                      {profile.first_name || "Not set"}
+                    </p>
                   )}
                 </div>
 
@@ -311,11 +369,19 @@ export default function Profile() {
                     <Input
                       id="last_name"
                       value={profile.last_name}
-                      onChange={(e) => setProfile(prev => ({ ...prev, last_name: e.target.value, name: `${prev.first_name} ${e.target.value}` }))}
+                      onChange={(e) =>
+                        setProfile((prev) => ({
+                          ...prev,
+                          last_name: e.target.value,
+                          name: `${prev.first_name} ${e.target.value}`,
+                        }))
+                      }
                       placeholder="Enter your last name"
                     />
                   ) : (
-                    <p className="text-lg font-semibold text-gray-900">{profile.last_name || 'Not set'}</p>
+                    <p className="text-lg font-semibold text-gray-900">
+                      {profile.last_name || "Not set"}
+                    </p>
                   )}
                 </div>
 
@@ -325,11 +391,18 @@ export default function Profile() {
                     <Input
                       id="hostel"
                       value={profile.hostel}
-                      onChange={(e) => setProfile(prev => ({ ...prev, hostel: e.target.value }))}
+                      onChange={(e) =>
+                        setProfile((prev) => ({
+                          ...prev,
+                          hostel: e.target.value,
+                        }))
+                      }
                       placeholder="e.g., Brahmaputra Hostel"
                     />
                   ) : (
-                    <p className="text-lg text-gray-700">{profile.hostel || 'Not set'}</p>
+                    <p className="text-lg text-gray-700">
+                      {profile.hostel || "Not set"}
+                    </p>
                   )}
                 </div>
               </div>
@@ -341,7 +414,12 @@ export default function Profile() {
                     <Input
                       id="phone"
                       value={profile.phone}
-                      onChange={(e) => setProfile(prev => ({ ...prev, phone: e.target.value }))}
+                      onChange={(e) =>
+                        setProfile((prev) => ({
+                          ...prev,
+                          phone: e.target.value,
+                        }))
+                      }
                       placeholder="+91-9876543210"
                     />
                   ) : profile.phone ? (
@@ -369,8 +447,10 @@ export default function Profile() {
                       <Mail className="h-4 w-4 mr-2" />
                       {profile.email}
                     </Button>
-                    {profile.oauth_provider === 'google' && (
-                      <Badge variant="secondary" className="text-xs">Verified</Badge>
+                    {profile.oauth_provider === "google" && (
+                      <Badge variant="secondary" className="text-xs">
+                        Verified
+                      </Badge>
                     )}
                   </div>
                 </div>
@@ -389,13 +469,19 @@ export default function Profile() {
             {isEditing || showPreferencesSetup ? (
               <Textarea
                 value={profile.introduction}
-                onChange={(e) => setProfile(prev => ({ ...prev, introduction: e.target.value }))}
+                onChange={(e) =>
+                  setProfile((prev) => ({
+                    ...prev,
+                    introduction: e.target.value,
+                  }))
+                }
                 rows={4}
                 placeholder="Share something about yourself - your interests, academic goals, or what brings you to SafeSpace..."
               />
             ) : (
               <p className="text-gray-700 leading-relaxed">
-                {profile.introduction || 'No introduction yet. Click "Edit Profile" to add one!'}
+                {profile.introduction ||
+                  'No introduction yet. Click "Edit Profile" to add one!'}
               </p>
             )}
           </CardContent>
@@ -419,7 +505,8 @@ export default function Profile() {
               </Button>
             </CardTitle>
             <CardDescription>
-              These contacts will be notified when you trigger an emergency SOS alert
+              These contacts will be notified when you trigger an emergency SOS
+              alert
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -433,7 +520,12 @@ export default function Profile() {
                       <Input
                         id="contact_name"
                         value={newContact.name}
-                        onChange={(e) => setNewContact(prev => ({ ...prev, name: e.target.value }))}
+                        onChange={(e) =>
+                          setNewContact((prev) => ({
+                            ...prev,
+                            name: e.target.value,
+                          }))
+                        }
                         placeholder="John Doe"
                       />
                     </div>
@@ -442,7 +534,12 @@ export default function Profile() {
                       <Input
                         id="contact_phone"
                         value={newContact.phone}
-                        onChange={(e) => setNewContact(prev => ({ ...prev, phone: e.target.value }))}
+                        onChange={(e) =>
+                          setNewContact((prev) => ({
+                            ...prev,
+                            phone: e.target.value,
+                          }))
+                        }
                         placeholder="+91-9876543210"
                       />
                     </div>
@@ -452,7 +549,12 @@ export default function Profile() {
                         id="contact_email"
                         type="email"
                         value={newContact.email}
-                        onChange={(e) => setNewContact(prev => ({ ...prev, email: e.target.value }))}
+                        onChange={(e) =>
+                          setNewContact((prev) => ({
+                            ...prev,
+                            email: e.target.value,
+                          }))
+                        }
                         placeholder="john@example.com"
                       />
                     </div>
@@ -462,14 +564,14 @@ export default function Profile() {
                       variant="outline"
                       onClick={() => {
                         setShowAddContact(false);
-                        setNewContact({ name: '', email: '', phone: '' });
+                        setNewContact({ name: "", email: "", phone: "" });
                       }}
                       disabled={isLoading}
                     >
                       Cancel
                     </Button>
                     <Button onClick={handleAddContact} disabled={isLoading}>
-                      {isLoading ? 'Adding...' : 'Add Contact'}
+                      {isLoading ? "Adding..." : "Add Contact"}
                     </Button>
                   </div>
                 </CardContent>
@@ -480,7 +582,9 @@ export default function Profile() {
             {trustedContacts.length === 0 ? (
               <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
                 <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                <p className="text-gray-600 font-medium mb-2">No Trusted Contacts Yet</p>
+                <p className="text-gray-600 font-medium mb-2">
+                  No Trusted Contacts Yet
+                </p>
                 <p className="text-sm text-gray-500 mb-4">
                   Add emergency contacts who will be notified during SOS alerts
                 </p>
@@ -504,7 +608,9 @@ export default function Profile() {
                         <User className="h-6 w-6 text-purple-600" />
                       </div>
                       <div>
-                        <h4 className="font-semibold text-gray-900">{contact.name}</h4>
+                        <h4 className="font-semibold text-gray-900">
+                          {contact.name}
+                        </h4>
                         <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
                           <span className="flex items-center">
                             <Phone className="h-3 w-3 mr-1" />
@@ -532,7 +638,9 @@ export default function Profile() {
                         variant="ghost"
                         size="sm"
                         className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                        onClick={() => handleDeleteContact(contact.id, contact.name)}
+                        onClick={() =>
+                          handleDeleteContact(contact.id, contact.name)
+                        }
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -552,10 +660,9 @@ export default function Profile() {
               <span>SafeSpace Preferences</span>
             </CardTitle>
             <CardDescription>
-              {showPreferencesSetup 
+              {showPreferencesSetup
                 ? "Select what matters most to you - this helps us personalize your experience"
-                : "Your selected focus areas in SafeSpace"
-              }
+                : "Your selected focus areas in SafeSpace"}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -565,73 +672,122 @@ export default function Profile() {
                   Click to select/deselect your preferences:
                 </p>
               )}
-              
+
               <div className="flex flex-wrap gap-3">
                 <Badge
-                  variant={profile.preferences.includes('Safety') ? 'default' : 'outline'}
+                  variant={
+                    profile.preferences.includes("Safety")
+                      ? "default"
+                      : "outline"
+                  }
                   className={`cursor-pointer px-4 py-2 text-sm transition-all ${
-                    profile.preferences.includes('Safety')
-                      ? 'bg-blue-600 hover:bg-blue-700'
-                      : 'hover:bg-blue-50'
-                  } ${(isEditing || showPreferencesSetup) ? '' : 'cursor-default'}`}
-                  onClick={() => (isEditing || showPreferencesSetup) && togglePreference('Safety')}
+                    profile.preferences.includes("Safety")
+                      ? "bg-blue-600 hover:bg-blue-700"
+                      : "hover:bg-blue-50"
+                  } ${
+                    isEditing || showPreferencesSetup ? "" : "cursor-default"
+                  }`}
+                  onClick={() =>
+                    (isEditing || showPreferencesSetup) &&
+                    togglePreference("Safety")
+                  }
                 >
                   <ShieldCheck className="h-4 w-4 mr-2" />
                   Safety & Security
                 </Badge>
-                
+
                 <Badge
-                  variant={profile.preferences.includes('Mental Health') ? 'default' : 'outline'}
+                  variant={
+                    profile.preferences.includes("Mental Health")
+                      ? "default"
+                      : "outline"
+                  }
                   className={`cursor-pointer px-4 py-2 text-sm transition-all ${
-                    profile.preferences.includes('Mental Health')
-                      ? 'bg-green-600 hover:bg-green-700'
-                      : 'hover:bg-green-50'
-                  } ${(isEditing || showPreferencesSetup) ? '' : 'cursor-default'}`}
-                  onClick={() => (isEditing || showPreferencesSetup) && togglePreference('Mental Health')}
+                    profile.preferences.includes("Mental Health")
+                      ? "bg-green-600 hover:bg-green-700"
+                      : "hover:bg-green-50"
+                  } ${
+                    isEditing || showPreferencesSetup ? "" : "cursor-default"
+                  }`}
+                  onClick={() =>
+                    (isEditing || showPreferencesSetup) &&
+                    togglePreference("Mental Health")
+                  }
                 >
                   <Heart className="h-4 w-4 mr-2" />
                   Mental Health & Wellness
                 </Badge>
-                
+
                 <Badge
-                  variant={profile.preferences.includes('Academic Support') ? 'default' : 'outline'}
+                  variant={
+                    profile.preferences.includes("Academic Support")
+                      ? "default"
+                      : "outline"
+                  }
                   className={`cursor-pointer px-4 py-2 text-sm transition-all ${
-                    profile.preferences.includes('Academic Support')
-                      ? 'bg-purple-600 hover:bg-purple-700'
-                      : 'hover:bg-purple-50'
-                  } ${(isEditing || showPreferencesSetup) ? '' : 'cursor-default'}`}
-                  onClick={() => (isEditing || showPreferencesSetup) && togglePreference('Academic Support')}
+                    profile.preferences.includes("Academic Support")
+                      ? "bg-purple-600 hover:bg-purple-700"
+                      : "hover:bg-purple-50"
+                  } ${
+                    isEditing || showPreferencesSetup ? "" : "cursor-default"
+                  }`}
+                  onClick={() =>
+                    (isEditing || showPreferencesSetup) &&
+                    togglePreference("Academic Support")
+                  }
                 >
                   📚 Academic Support
                 </Badge>
-                
+
                 <Badge
-                  variant={profile.preferences.includes('Peer Support') ? 'default' : 'outline'}
+                  variant={
+                    profile.preferences.includes("Peer Support")
+                      ? "default"
+                      : "outline"
+                  }
                   className={`cursor-pointer px-4 py-2 text-sm transition-all ${
-                    profile.preferences.includes('Peer Support')
-                      ? 'bg-orange-600 hover:bg-orange-700'
-                      : 'hover:bg-orange-50'
-                  } ${(isEditing || showPreferencesSetup) ? '' : 'cursor-default'}`}
-                  onClick={() => (isEditing || showPreferencesSetup) && togglePreference('Peer Support')}
+                    profile.preferences.includes("Peer Support")
+                      ? "bg-orange-600 hover:bg-orange-700"
+                      : "hover:bg-orange-50"
+                  } ${
+                    isEditing || showPreferencesSetup ? "" : "cursor-default"
+                  }`}
+                  onClick={() =>
+                    (isEditing || showPreferencesSetup) &&
+                    togglePreference("Peer Support")
+                  }
                 >
                   👥 Peer Support
                 </Badge>
               </div>
 
-              {!isEditing && !showPreferencesSetup && profile.preferences.length === 0 && (
-                <p className="text-gray-500 italic">No preferences selected. Click "Edit Profile" to add some!</p>
-              )}
+              {!isEditing &&
+                !showPreferencesSetup &&
+                profile.preferences.length === 0 && (
+                  <p className="text-gray-500 italic">
+                    No preferences selected. Click "Edit Profile" to add some!
+                  </p>
+                )}
             </div>
           </CardContent>
         </Card>
 
         {/* Action Buttons */}
         <div className="flex justify-center space-x-4">
-          {(isEditing || showPreferencesSetup) ? (
+          {isEditing || showPreferencesSetup ? (
             <>
-              <Button onClick={handleSave} size="lg" className="px-8" disabled={isLoading}>
+              <Button
+                onClick={handleSave}
+                size="lg"
+                className="px-8"
+                disabled={isLoading}
+              >
                 <Save className="h-5 w-5 mr-2" />
-                {isLoading ? 'Saving...' : (showPreferencesSetup ? 'Complete Setup' : 'Save Changes')}
+                {isLoading
+                  ? "Saving..."
+                  : showPreferencesSetup
+                  ? "Complete Setup"
+                  : "Save Changes"}
               </Button>
               {!showPreferencesSetup && (
                 <Button
