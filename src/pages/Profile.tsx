@@ -47,6 +47,7 @@ export default function Profile() {
   const [isLoading, setIsLoading] = useState(false);
   const [trustedContacts, setTrustedContacts] = useState<any[]>([]);
   const [showAddContact, setShowAddContact] = useState(false);
+  const [showPreferencesSetup, setShowPreferencesSetup] = useState(false);
   const [newContact, setNewContact] = useState({
     name: "",
     email: "",
