@@ -1,12 +1,12 @@
-import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
+} from "@/components/ui/card";
 import {
   Shield,
   Phone,
@@ -14,8 +14,8 @@ import {
   AlertTriangle,
   Navigation,
   ArrowLeft,
-} from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
+} from "lucide-react";
+import { useState, useRef, useEffect } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -23,25 +23,29 @@ import {
   Polyline,
   Popup,
   useMap,
-} from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
-import { toast } from 'sonner';
-import { sosService, userService } from '@/lib/services';
-import { useAuth } from '@/contexts/AuthContext';
-import { NODE_API_URL } from '@/lib/api';
+} from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
+import { toast } from "sonner";
+import { sosService, userService } from "@/lib/services";
+import { useAuth } from "@/contexts/AuthContext";
+import { NODE_API_URL } from "@/lib/api";
 
 // Fix default marker issue
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
-    'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
 // Live location marker
-function LiveLocationMarker({ position }: { position: [number, number] | null }) {
+function LiveLocationMarker({
+  position,
+}: {
+  position: [number, number] | null;
+}) {
   const map = useMap();
   useEffect(() => {
     if (position) map.setView(position, map.getZoom(), { animate: true });
@@ -51,7 +55,7 @@ function LiveLocationMarker({ position }: { position: [number, number] | null })
     <Marker
       position={position}
       icon={L.divIcon({
-        className: 'custom-icon',
+        className: "custom-icon",
         html: `<div style="
           background: rgba(0, 102, 255, 0.7);
           border: 2px solid white;
@@ -82,7 +86,7 @@ async function getORSRoute(
     );
     return coords;
   } catch (err) {
-    console.error('ORS route fetch error:', err);
+    console.error("ORS route fetch error:", err);
     return [];
   }
 }
@@ -105,7 +109,7 @@ export default function SafetyHub() {
   const [loadingContacts, setLoadingContacts] = useState(true);
 
   // Emergency number (default fallback)
-  const emergencyNumber = '112'; // International emergency number
+  const emergencyNumber = "112"; // International emergency number
 
   // Load trusted contacts on mount
   useEffect(() => {
@@ -119,7 +123,7 @@ export default function SafetyHub() {
         setTrustedContacts(response.contacts || []);
       }
     } catch (error) {
-      console.error('Failed to load trusted contacts:', error);
+      console.error("Failed to load trusted contacts:", error);
     } finally {
       setLoadingContacts(false);
     }
@@ -133,8 +137,8 @@ export default function SafetyHub() {
     try {
       // Check if user is logged in using Supabase auth
       if (!user) {
-        toast.error('Not Logged In', {
-          description: 'Please log in to use SOS features.',
+        toast.error("Not Logged In", {
+          description: "Please log in to use SOS features.",
         });
         setIsCallingEmergency(false);
         setSosActive(false);
@@ -143,8 +147,9 @@ export default function SafetyHub() {
 
       // Check if user has trusted contacts
       if (trustedContacts.length === 0) {
-        toast.error('No Trusted Contacts', {
-          description: 'Please add trusted contacts in your profile before using SOS.',
+        toast.error("No Trusted Contacts", {
+          description:
+            "Please add trusted contacts in your profile before using SOS.",
         });
         setIsCallingEmergency(false);
         setSosActive(false);
@@ -153,12 +158,13 @@ export default function SafetyHub() {
 
       // Get phone numbers - use 'phone' field from Supabase
       const phoneNumbers = trustedContacts
-        .map(contact => contact.phone)
-        .filter(phone => phone);
+        .map((contact) => contact.phone)
+        .filter((phone) => phone);
 
       if (phoneNumbers.length === 0) {
-        toast.error('No Phone Numbers', {
-          description: 'Your trusted contacts need phone numbers for emergency alerts.',
+        toast.error("No Phone Numbers", {
+          description:
+            "Your trusted contacts need phone numbers for emergency alerts.",
         });
         setIsCallingEmergency(false);
         setSosActive(false);
@@ -171,76 +177,86 @@ export default function SafetyHub() {
       let locationError = null;
 
       try {
-        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject, {
-            enableHighAccuracy: true, // Try high accuracy
-            timeout: 15000,           // Wait up to 15s (increased from 5s)
-            maximumAge: 30000,        // Accept cached position up to 30s old
-          });
-        });
+        const position = await new Promise<GeolocationPosition>(
+          (resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+              enableHighAccuracy: true, // Try high accuracy
+              timeout: 15000, // Wait up to 15s (increased from 5s)
+              maximumAge: 30000, // Accept cached position up to 30s old
+            });
+          }
+        );
         latitude = position.coords.latitude;
         longitude = position.coords.longitude;
       } catch (err: any) {
-        console.warn('Could not get precise location for SOS:', err);
+        console.warn("Could not get precise location for SOS:", err);
         locationError = err;
-        // Fallback: Proceed with 0,0 or maybe try low accuracy? 
+        // Fallback: Proceed with 0,0 or maybe try low accuracy?
         // For now, we proceed so the CALL still goes through.
-        toast.warning('Location Unavailable', {
-          description: 'Sending SOS without precise location...',
+        toast.warning("Location Unavailable", {
+          description: "Sending SOS without precise location...",
         });
       }
 
-      toast.info('Emergency Alert Activated', {
-        description: 'Notifying your trusted contacts...',
+      toast.info("Emergency Alert Activated", {
+        description: "Notifying your trusted contacts...",
       });
 
       // Save SOS alert to database first
       try {
-        console.log('Triggering SOS with location:', { latitude, longitude });
+        console.log("Triggering SOS with location:", { latitude, longitude });
         const sosResponse = await sosService.triggerSOS(latitude, longitude);
-        console.log('SOS response:', sosResponse);
+        console.log("SOS response:", sosResponse);
 
         if (sosResponse.success) {
-          console.log('✅ SOS alert saved to database:', sosResponse);
-          toast.success('SOS Alert Saved', {
-            description: 'Emergency recorded in system. Notifying your contacts...',
+          console.log("✅ SOS alert saved to database:", sosResponse);
+          toast.success("SOS Alert Saved", {
+            description:
+              "Emergency recorded in system. Notifying your contacts...",
           });
         }
       } catch (dbError) {
-        console.error('Database save error:', dbError);
-        toast.error('Database Error', {
-          description: 'Failed to save SOS to database. Still notifying contacts...',
+        console.error("Database save error:", dbError);
+        toast.error("Database Error", {
+          description:
+            "Failed to save SOS to database. Still notifying contacts...",
         });
         // Continue with notification even if database fails
       }
 
       // Notify trusted contacts with call and SMS
       try {
-        const response = await fetch(`${NODE_API_URL}/emergency/notify-contacts`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            latitude,
-            longitude,
-            phoneNumbers: phoneNumbers,
-            makeCall: true, // Will call the first contact
-          }),
-        });
+        const response = await fetch(
+          `${NODE_API_URL}/emergency/notify-contacts`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              latitude,
+              longitude,
+              phoneNumbers: phoneNumbers,
+              makeCall: true, // Will call the first contact
+            }),
+          }
+        );
 
         const data = await response.json();
 
         if (data.success) {
-          toast.success('Emergency Alert Sent!', {
-            description: `${phoneNumbers.length} trusted contact(s) notified${locationError ? ' (Location missing)' : ''}`,
+          toast.success("Emergency Alert Sent!", {
+            description: `${phoneNumbers.length} trusted contact(s) notified${
+              locationError ? " (Location missing)" : ""
+            }`,
             duration: 5000,
           });
         } else {
-          throw new Error(data.message || 'Failed to notify contacts');
+          throw new Error(data.message || "Failed to notify contacts");
         }
       } catch (err) {
-        console.error('Failed to notify trusted contacts:', err);
-        toast.error('Notification Failed', {
-          description: 'Could not send alerts. Opening phone dialer as fallback...',
+        console.error("Failed to notify trusted contacts:", err);
+        toast.error("Notification Failed", {
+          description:
+            "Could not send alerts. Opening phone dialer as fallback...",
         });
 
         // Fallback: Call first trusted contact directly
@@ -248,11 +264,10 @@ export default function SafetyHub() {
           window.location.href = `tel:${phoneNumbers[0]}`;
         }, 1000);
       }
-
     } catch (error: any) {
-      console.error('SOS error:', error);
-      toast.error('SOS Failed', {
-        description: 'Unexpected error occurred.',
+      console.error("SOS error:", error);
+      toast.error("SOS Failed", {
+        description: "Unexpected error occurred.",
       });
     } finally {
       setIsCallingEmergency(false);
@@ -265,20 +280,21 @@ export default function SafetyHub() {
     if (!locationSharing) {
       // Check if user has trusted contacts
       if (trustedContacts.length === 0) {
-        toast.error('No Trusted Contacts', {
-          description: 'Please add trusted contacts in your profile first.',
+        toast.error("No Trusted Contacts", {
+          description: "Please add trusted contacts in your profile first.",
         });
         return;
       }
 
       // Extract phone numbers from trusted contacts - use 'phone' field
       const phoneNumbers = trustedContacts
-        .map(contact => contact.phone)
-        .filter(phone => phone); // Filter out empty phone numbers
+        .map((contact) => contact.phone)
+        .filter((phone) => phone); // Filter out empty phone numbers
 
       if (phoneNumbers.length === 0) {
-        toast.error('No Phone Numbers', {
-          description: 'Your trusted contacts need phone numbers for SMS alerts.',
+        toast.error("No Phone Numbers", {
+          description:
+            "Your trusted contacts need phone numbers for SMS alerts.",
         });
         return;
       }
@@ -290,29 +306,32 @@ export default function SafetyHub() {
           const { latitude, longitude } = pos.coords;
 
           try {
-            const response = await fetch(`${NODE_API_URL}/location/share/start`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                latitude,
-                longitude,
-                phoneNumbers: phoneNumbers,
-              }),
-            });
+            const response = await fetch(
+              `${NODE_API_URL}/location/share/start`,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  latitude,
+                  longitude,
+                  phoneNumbers: phoneNumbers,
+                }),
+              }
+            );
 
             const data = await response.json();
 
             if (data.success) {
-              toast.success('Location Sharing Started', {
+              toast.success("Location Sharing Started", {
                 description: `SMS sent to ${phoneNumbers.length} trusted contacts`,
               });
             } else {
-              throw new Error('Failed to start location sharing');
+              throw new Error("Failed to start location sharing");
             }
           } catch (err) {
-            console.error('Error starting location share:', err);
-            toast.error('Location Share Failed', {
-              description: 'Could not send SMS to contacts. Check backend.',
+            console.error("Error starting location share:", err);
+            toast.error("Location Share Failed", {
+              description: "Could not send SMS to contacts. Check backend.",
             });
           }
         });
@@ -327,17 +346,17 @@ export default function SafetyHub() {
             if (locationUpdateCount.current % 5 === 0) {
               try {
                 await fetch(`${NODE_API_URL}/location/update`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({
                     latitude,
                     longitude,
                     phoneNumbers: phoneNumbers,
                   }),
                 });
-                console.log('📍 Location update sent to trusted contacts');
+                console.log("📍 Location update sent to trusted contacts");
               } catch (err) {
-                console.error('Error updating location:', err);
+                console.error("Error updating location:", err);
               }
             }
           },
@@ -348,7 +367,7 @@ export default function SafetyHub() {
         watchIdRef.current = watchId;
         setLocationSharing(true);
       } else {
-        toast.error('Geolocation Not Supported', {
+        toast.error("Geolocation Not Supported", {
           description: "Your browser doesn't support location tracking",
         });
       }
@@ -361,23 +380,23 @@ export default function SafetyHub() {
 
       // Extract phone numbers for stop notification - use 'phone' field
       const phoneNumbers = trustedContacts
-        .map(contact => contact.phone)
-        .filter(phone => phone);
+        .map((contact) => contact.phone)
+        .filter((phone) => phone);
 
       // Send stop notification
       fetch(`${NODE_API_URL}/location/share/stop`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           phoneNumbers: phoneNumbers,
         }),
-      }).catch(err => console.error('Error stopping share:', err));
+      }).catch((err) => console.error("Error stopping share:", err));
 
       locationUpdateCount.current = 0;
       setLocationSharing(false);
 
-      toast.success('Location Sharing Stopped', {
-        description: 'Your contacts have been notified',
+      toast.success("Location Sharing Stopped", {
+        description: "Your contacts have been notified",
       });
     }
   };
@@ -385,35 +404,39 @@ export default function SafetyHub() {
   // --- Campus Safe Route Navigation ---
   const [route, setRoute] = useState<string[]>([]);
   const [pathCoords, setPathCoords] = useState<[number, number][]>([]);
-  const [destination, setDestination] = useState('S. Ramanujan Block - IIT Ropar');
-  const [livePosition, setLivePosition] = useState<[number, number] | null>(null);
+  const [destination, setDestination] = useState(
+    "S. Ramanujan Block - IIT Ropar"
+  );
+  const [livePosition, setLivePosition] = useState<[number, number] | null>(
+    null
+  );
 
   const coordinates: Record<string, [number, number]> = {
-    'Brahmaputra Girls Hostel': [30.9783, 76.537],
-    'Beas Hostel': [30.9786, 76.5362],
-    'Satluj Hostel IIT Ropar': [30.9793, 76.5358],
-    'M. Visvesvaraya Block IIT Ropar': [30.9802, 76.5355],
-    'S. Ramanujan Block - IIT Ropar': [30.981, 76.535],
-    'Cafeteria IIT Ropar': [30.979, 76.5347],
-    'Logo IIT Ropar': [30.9815, 76.5344],
+    "Brahmaputra Girls Hostel": [30.9783, 76.537],
+    "Beas Hostel": [30.9786, 76.5362],
+    "Satluj Hostel IIT Ropar": [30.9793, 76.5358],
+    "M. Visvesvaraya Block IIT Ropar": [30.9802, 76.5355],
+    "S. Ramanujan Block - IIT Ropar": [30.981, 76.535],
+    "Cafeteria IIT Ropar": [30.979, 76.5347],
+    "Logo IIT Ropar": [30.9815, 76.5344],
   };
 
   const campusGraph = {
-    'Brahmaputra Girls Hostel': ['Beas Hostel', 'Satluj Hostel IIT Ropar'],
-    'Beas Hostel': ['Brahmaputra Girls Hostel', 'Satluj Hostel IIT Ropar'],
-    'Satluj Hostel IIT Ropar': [
-      'Beas Hostel',
-      'M. Visvesvaraya Block IIT Ropar',
-      'Cafeteria IIT Ropar',
+    "Brahmaputra Girls Hostel": ["Beas Hostel", "Satluj Hostel IIT Ropar"],
+    "Beas Hostel": ["Brahmaputra Girls Hostel", "Satluj Hostel IIT Ropar"],
+    "Satluj Hostel IIT Ropar": [
+      "Beas Hostel",
+      "M. Visvesvaraya Block IIT Ropar",
+      "Cafeteria IIT Ropar",
     ],
-    'M. Visvesvaraya Block IIT Ropar': [
-      'Satluj Hostel IIT Ropar',
-      'S. Ramanujan Block - IIT Ropar',
-      'Logo IIT Ropar',
+    "M. Visvesvaraya Block IIT Ropar": [
+      "Satluj Hostel IIT Ropar",
+      "S. Ramanujan Block - IIT Ropar",
+      "Logo IIT Ropar",
     ],
-    'S. Ramanujan Block - IIT Ropar': ['M. Visvesvaraya Block IIT Ropar'],
-    'Cafeteria IIT Ropar': ['Satluj Hostel IIT Ropar'],
-    'Logo IIT Ropar': ['M. Visvesvaraya Block IIT Ropar'],
+    "S. Ramanujan Block - IIT Ropar": ["M. Visvesvaraya Block IIT Ropar"],
+    "Cafeteria IIT Ropar": ["Satluj Hostel IIT Ropar"],
+    "Logo IIT Ropar": ["M. Visvesvaraya Block IIT Ropar"],
   };
 
   const findShortestPath = (graph: any, start: string, end: string) => {
@@ -431,13 +454,20 @@ export default function SafetyHub() {
   };
 
   const handleFindRoute = async () => {
-    const path = findShortestPath(campusGraph, 'Brahmaputra Girls Hostel', destination);
+    const path = findShortestPath(
+      campusGraph,
+      "Brahmaputra Girls Hostel",
+      destination
+    );
     setRoute(path);
 
     if (path.length > 1) {
       const orsCoords: [number, number][] = [];
       for (let i = 0; i < path.length - 1; i++) {
-        const segment = await getORSRoute(coordinates[path[i]], coordinates[path[i + 1]]);
+        const segment = await getORSRoute(
+          coordinates[path[i]],
+          coordinates[path[i + 1]]
+        );
         orsCoords.push(...segment);
       }
       setPathCoords(orsCoords);
@@ -452,7 +482,7 @@ export default function SafetyHub() {
         const { latitude, longitude } = pos.coords;
         setLivePosition([latitude, longitude]);
       },
-      (err) => console.error('Error fetching location:', err),
+      (err) => console.error("Error fetching location:", err),
       { enableHighAccuracy: true, maximumAge: 5000, timeout: 5000 }
     );
     return () => navigator.geolocation.clearWatch(watchId);
@@ -475,19 +505,23 @@ export default function SafetyHub() {
       <div className="max-w-5xl mx-auto p-6">
         {/* --- Emergency SOS (Automated Call & SMS) --- */}
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-6">Emergency Safety Center</h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-6">
+            Emergency Safety Center
+          </h2>
           <p className="text-lg text-gray-600 mb-8">
-            Press the button to automatically call and send SMS to emergency services at {emergencyNumber}
+            Press the button to automatically call and send SMS to emergency
+            services at {emergencyNumber}
           </p>
 
           <Button
             onClick={handleSOS}
             disabled={isCallingEmergency}
             size="lg"
-            className={`w-64 h-64 rounded-full text-2xl font-bold transition-all duration-300 ${sosActive
-              ? 'bg-red-700 animate-pulse scale-110'
-              : 'bg-red-600 hover:bg-red-700 hover:scale-105'
-              } ${isCallingEmergency ? 'opacity-75' : ''}`}
+            className={`w-64 h-64 rounded-full text-2xl font-bold transition-all duration-300 ${
+              sosActive
+                ? "bg-red-700 animate-pulse scale-110"
+                : "bg-red-600 hover:bg-red-700 hover:scale-105"
+            } ${isCallingEmergency ? "opacity-75" : ""}`}
           >
             {isCallingEmergency ? (
               <div className="text-center">
@@ -526,9 +560,15 @@ export default function SafetyHub() {
 
           <div className="mt-4 text-sm text-gray-600 bg-gray-50 p-3 rounded">
             <p className="font-semibold">What happens when you press SOS:</p>
-            <p className="text-xs mt-1">1. Automated call to your first trusted contact</p>
-            <p className="text-xs">2. SMS sent to ALL trusted contacts with your GPS location</p>
-            <p className="text-xs">3. Emergency alert saved to database for tracking</p>
+            <p className="text-xs mt-1">
+              1. Automated call to your first trusted contact
+            </p>
+            <p className="text-xs">
+              2. SMS sent to ALL trusted contacts with your GPS location
+            </p>
+            <p className="text-xs">
+              3. Emergency alert saved to database for tracking
+            </p>
           </div>
         </div>
 
@@ -548,10 +588,12 @@ export default function SafetyHub() {
             <CardContent>
               <Button
                 onClick={toggleLocationSharing}
-                variant={locationSharing ? 'destructive' : 'default'}
+                variant={locationSharing ? "destructive" : "default"}
                 className="w-full mb-4"
               >
-                {locationSharing ? 'Stop Sharing Location' : 'Start Sharing Location'}
+                {locationSharing
+                  ? "Stop Sharing Location"
+                  : "Start Sharing Location"}
               </Button>
 
               {locationSharing && (
@@ -566,7 +608,9 @@ export default function SafetyHub() {
               {!locationSharing && (
                 <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded">
                   <p className="font-semibold mb-1">How it works:</p>
-                  <p>• Sends SMS with Google Maps link to your trusted contacts</p>
+                  <p>
+                    • Sends SMS with Google Maps link to your trusted contacts
+                  </p>
                   <p>• Updates them as you move</p>
                   <p>• Separate from emergency services</p>
                 </div>
@@ -602,7 +646,7 @@ export default function SafetyHub() {
               {route.length > 0 && (
                 <div className="bg-green-50 p-3 rounded text-gray-700 mb-4">
                   <p className="font-semibold text-sm">✅ Shortest Path:</p>
-                  <p className="text-xs">{route.join(' → ')}</p>
+                  <p className="text-xs">{route.join(" → ")}</p>
                 </div>
               )}
 
@@ -610,7 +654,7 @@ export default function SafetyHub() {
                 <MapContainer
                   center={[30.9793, 76.5365]}
                   zoom={17}
-                  style={{ height: '100%', width: '100%' }}
+                  style={{ height: "100%", width: "100%" }}
                 >
                   <TileLayer
                     attribution="&copy; OpenStreetMap contributors"
@@ -621,7 +665,9 @@ export default function SafetyHub() {
                       <Popup>{name}</Popup>
                     </Marker>
                   ))}
-                  {pathCoords.length > 1 && <Polyline positions={pathCoords} color="blue" />}
+                  {pathCoords.length > 1 && (
+                    <Polyline positions={pathCoords} color="blue" />
+                  )}
                   <LiveLocationMarker position={livePosition} />
                 </MapContainer>
               </div>
@@ -632,7 +678,9 @@ export default function SafetyHub() {
         {/* Emergency Contacts */}
         <Card className="bg-red-50 border-red-200">
           <CardHeader>
-            <CardTitle className="text-red-800">Quick Dial Emergency Contacts</CardTitle>
+            <CardTitle className="text-red-800">
+              Quick Dial Emergency Contacts
+            </CardTitle>
             <CardDescription className="text-red-700">
               Manual backup options (opens phone dialer)
             </CardDescription>
@@ -642,7 +690,7 @@ export default function SafetyHub() {
               <Button
                 variant="outline"
                 className="border-red-300 text-red-700 hover:bg-red-100"
-                onClick={() => window.location.href = 'tel:112'}
+                onClick={() => (window.location.href = "tel:112")}
               >
                 <Phone className="h-4 w-4 mr-2" />
                 112 - Emergency
@@ -650,7 +698,7 @@ export default function SafetyHub() {
               <Button
                 variant="outline"
                 className="border-red-300 text-red-700 hover:bg-red-100"
-                onClick={() => window.location.href = 'tel:100'}
+                onClick={() => (window.location.href = "tel:100")}
               >
                 <Phone className="h-4 w-4 mr-2" />
                 100 - Police
@@ -658,7 +706,7 @@ export default function SafetyHub() {
               <Button
                 variant="outline"
                 className="border-red-300 text-red-700 hover:bg-red-100"
-                onClick={() => window.location.href = 'tel:124'}
+                onClick={() => (window.location.href = "tel:124")}
               >
                 <Phone className="h-4 w-4 mr-2" />
                 124 - Campus Security

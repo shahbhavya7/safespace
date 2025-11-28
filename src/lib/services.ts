@@ -1,21 +1,27 @@
 // Services layer - All API calls using Supabase
-import { supabase, getCurrentUser, getSession } from './supabase';
+import { supabase, getCurrentUser, getSession } from "./supabase";
 
 // ============ AUTH SERVICE ============
 export const authService = {
   // Register with email/password
-  register: async (email: string, password: string, firstName: string, lastName?: string, phone?: string) => {
+  register: async (
+    email: string,
+    password: string,
+    firstName: string,
+    lastName?: string,
+    phone?: string
+  ) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
           first_name: firstName,
-          last_name: lastName || '',
-          phone: phone || '',
-          full_name: `${firstName} ${lastName || ''}`.trim(),
-        }
-      }
+          last_name: lastName || "",
+          phone: phone || "",
+          full_name: `${firstName} ${lastName || ""}`.trim(),
+        },
+      },
     });
 
     if (error) {
@@ -24,20 +30,20 @@ export const authService = {
 
     // Create profile in profiles table
     if (data.user) {
-      await supabase.from('profiles').upsert({
+      await supabase.from("profiles").upsert({
         id: data.user.id,
         email: data.user.email,
         first_name: firstName,
-        last_name: lastName || '',
-        phone: phone || '',
+        last_name: lastName || "",
+        phone: phone || "",
         created_at: new Date().toISOString(),
       });
     }
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       user: data.user,
-      session: data.session 
+      session: data.session,
     };
   },
 
@@ -52,18 +58,18 @@ export const authService = {
       return { success: false, message: error.message };
     }
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       user: data.user,
-      session: data.session 
+      session: data.session,
     };
   },
 
   // Logout
   logout: async () => {
     await supabase.auth.signOut();
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('user');
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("user");
   },
 
   // Check if authenticated
@@ -75,7 +81,7 @@ export const authService = {
   // Get current user
   getCurrentUser: async () => {
     return getCurrentUser();
-  }
+  },
 };
 
 // ============ USER SERVICE ============
@@ -83,15 +89,15 @@ export const userService = {
   // Get user profile
   getProfile: async () => {
     const { user } = await getCurrentUser();
-    if (!user) return { success: false, message: 'Not authenticated' };
+    if (!user) return { success: false, message: "Not authenticated" };
 
     const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
       .single();
 
-    if (error && error.code !== 'PGRST116') {
+    if (error && error.code !== "PGRST116") {
       return { success: false, message: error.message };
     }
 
@@ -101,14 +107,18 @@ export const userService = {
       const newProfile = {
         id: user.id,
         email: user.email,
-        first_name: metadata.first_name || metadata.full_name?.split(' ')[0] || '',
-        last_name: metadata.last_name || metadata.full_name?.split(' ').slice(1).join(' ') || '',
-        phone: metadata.phone || '',
-        avatar_url: metadata.avatar_url || metadata.picture || '',
+        first_name:
+          metadata.first_name || metadata.full_name?.split(" ")[0] || "",
+        last_name:
+          metadata.last_name ||
+          metadata.full_name?.split(" ").slice(1).join(" ") ||
+          "",
+        phone: metadata.phone || "",
+        avatar_url: metadata.avatar_url || metadata.picture || "",
         created_at: new Date().toISOString(),
       };
 
-      await supabase.from('profiles').upsert(newProfile);
+      await supabase.from("profiles").upsert(newProfile);
       return { success: true, profile: newProfile };
     }
 
@@ -118,14 +128,14 @@ export const userService = {
   // Update user profile
   updateProfile: async (profileData: Record<string, any>) => {
     const { user } = await getCurrentUser();
-    if (!user) return { success: false, message: 'Not authenticated' };
+    if (!user) return { success: false, message: "Not authenticated" };
 
     const { data, error } = await supabase
-      .from('profiles')
-      .upsert({ 
-        id: user.id, 
-        ...profileData, 
-        updated_at: new Date().toISOString() 
+      .from("profiles")
+      .upsert({
+        id: user.id,
+        ...profileData,
+        updated_at: new Date().toISOString(),
       })
       .select()
       .single();
@@ -138,12 +148,17 @@ export const userService = {
   },
 
   // Add trusted contact
-  addTrustedContact: async (name: string, email: string, phone?: string, relationship?: string) => {
+  addTrustedContact: async (
+    name: string,
+    email: string,
+    phone?: string,
+    relationship?: string
+  ) => {
     const { user } = await getCurrentUser();
-    if (!user) return { success: false, message: 'Not authenticated' };
+    if (!user) return { success: false, message: "Not authenticated" };
 
     const { data, error } = await supabase
-      .from('trusted_contacts')
+      .from("trusted_contacts")
       .insert({
         user_id: user.id,
         name,
@@ -167,10 +182,10 @@ export const userService = {
     if (!user) return { success: false, contacts: [] };
 
     const { data, error } = await supabase
-      .from('trusted_contacts')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
+      .from("trusted_contacts")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
 
     if (error) {
       return { success: false, message: error.message, contacts: [] };
@@ -182,9 +197,9 @@ export const userService = {
   // Delete trusted contact
   deleteTrustedContact: async (contactId: string) => {
     const { error } = await supabase
-      .from('trusted_contacts')
+      .from("trusted_contacts")
       .delete()
-      .eq('id', contactId);
+      .eq("id", contactId);
 
     if (error) {
       return { success: false, message: error.message };
@@ -199,9 +214,9 @@ export const userService = {
     if (!user) return { success: false };
 
     const { error } = await supabase
-      .from('profiles')
+      .from("profiles")
       .update({ last_active: new Date().toISOString() })
-      .eq('id', user.id);
+      .eq("id", user.id);
 
     return { success: !error };
   },
@@ -210,12 +225,17 @@ export const userService = {
 // ============ MOOD SERVICE ============
 export const moodService = {
   // Save mood log
-  saveMoodLog: async (moodLevel: number, moodEmoji: string, moodLabel: string, notes?: string) => {
+  saveMoodLog: async (
+    moodLevel: number,
+    moodEmoji: string,
+    moodLabel: string,
+    notes?: string
+  ) => {
     const { user } = await getCurrentUser();
-    if (!user) return { success: false, message: 'Not authenticated' };
+    if (!user) return { success: false, message: "Not authenticated" };
 
     const { data, error } = await supabase
-      .from('mood_entries')
+      .from("mood_entries")
       .insert({
         user_id: user.id,
         mood_level: moodLevel,
@@ -242,11 +262,11 @@ export const moodService = {
     startDate.setDate(startDate.getDate() - days);
 
     const { data, error } = await supabase
-      .from('mood_entries')
-      .select('*')
-      .eq('user_id', user.id)
-      .gte('created_at', startDate.toISOString())
-      .order('created_at', { ascending: false });
+      .from("mood_entries")
+      .select("*")
+      .eq("user_id", user.id)
+      .gte("created_at", startDate.toISOString())
+      .order("created_at", { ascending: false });
 
     if (error) {
       return { success: false, message: error.message, logs: [] };
@@ -264,10 +284,10 @@ export const moodService = {
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
     const { data, error } = await supabase
-      .from('mood_entries')
-      .select('mood_level')
-      .eq('user_id', user.id)
-      .gte('created_at', sevenDaysAgo.toISOString());
+      .from("mood_entries")
+      .select("mood_level")
+      .eq("user_id", user.id)
+      .gte("created_at", sevenDaysAgo.toISOString());
 
     if (error || !data || data.length === 0) {
       return { success: true, stats: { average: 0, total: 0 } };
@@ -277,12 +297,12 @@ export const moodService = {
     const sum = data.reduce((acc, entry) => acc + entry.mood_level, 0);
     const average = sum / total;
 
-    return { 
-      success: true, 
-      stats: { 
-        average: Math.round(average * 100) / 100, 
-        total 
-      } 
+    return {
+      success: true,
+      stats: {
+        average: Math.round(average * 100) / 100,
+        total,
+      },
     };
   },
 };
@@ -292,15 +312,15 @@ export const sosService = {
   // Trigger SOS alert
   triggerSOS: async (latitude?: number, longitude?: number) => {
     const { user } = await getCurrentUser();
-    if (!user) return { success: false, message: 'Not authenticated' };
+    if (!user) return { success: false, message: "Not authenticated" };
 
     const { data, error } = await supabase
-      .from('sos_alerts')
+      .from("sos_alerts")
       .insert({
         user_id: user.id,
         latitude: latitude || null,
         longitude: longitude || null,
-        status: 'active',
+        status: "active",
       })
       .select()
       .single();
@@ -315,12 +335,12 @@ export const sosService = {
   // Resolve SOS alert
   resolveSOS: async (sosId: string) => {
     const { data, error } = await supabase
-      .from('sos_alerts')
-      .update({ 
-        status: 'resolved', 
-        resolved_at: new Date().toISOString() 
+      .from("sos_alerts")
+      .update({
+        status: "resolved",
+        resolved_at: new Date().toISOString(),
       })
-      .eq('id', sosId)
+      .eq("id", sosId)
       .select()
       .single();
 
@@ -337,10 +357,10 @@ export const sosService = {
     if (!user) return { success: false, alerts: [] };
 
     const { data, error } = await supabase
-      .from('sos_alerts')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
+      .from("sos_alerts")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
 
     if (error) {
       return { success: false, message: error.message, alerts: [] };
@@ -353,63 +373,65 @@ export const sosService = {
 // ============ ADMIN SERVICE ============
 export const adminService = {
   setAdminToken: (token: string) => {
-    localStorage.setItem('adminToken', token);
+    localStorage.setItem("adminToken", token);
   },
 
   getAdminToken: () => {
-    return localStorage.getItem('adminToken');
+    return localStorage.getItem("adminToken");
   },
 
   isValidAdmin: () => {
-    const token = localStorage.getItem('adminToken');
-    return token === 'admin_secret_token_12345';
+    const token = localStorage.getItem("adminToken");
+    return token === "admin_secret_token_12345";
   },
 
   getAllUsers: async () => {
     if (!adminService.isValidAdmin()) {
-      return { success: false, message: 'Unauthorized' };
+      return { success: false, message: "Unauthorized" };
     }
 
     const { data: profiles, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .order('created_at', { ascending: false });
+      .from("profiles")
+      .select("*")
+      .order("created_at", { ascending: false });
 
     if (error) {
       return { success: false, message: error.message };
     }
 
-    const usersWithStats = await Promise.all((profiles || []).map(async (profile) => {
-      const { count: moodCount } = await supabase
-        .from('mood_entries')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', profile.id);
+    const usersWithStats = await Promise.all(
+      (profiles || []).map(async (profile) => {
+        const { count: moodCount } = await supabase
+          .from("mood_entries")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", profile.id);
 
-      const { count: sosCount } = await supabase
-        .from('sos_alerts')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', profile.id);
+        const { count: sosCount } = await supabase
+          .from("sos_alerts")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", profile.id);
 
-      return {
-        ...profile,
-        mood_logs_count: moodCount || 0,
-        sos_alerts_count: sosCount || 0,
-        total_interactions: (moodCount || 0) + (sosCount || 0),
-      };
-    }));
+        return {
+          ...profile,
+          mood_logs_count: moodCount || 0,
+          sos_alerts_count: sosCount || 0,
+          total_interactions: (moodCount || 0) + (sosCount || 0),
+        };
+      })
+    );
 
     return { success: true, data: usersWithStats };
   },
 
   getUserDetails: async (userId: string) => {
     if (!adminService.isValidAdmin()) {
-      return { success: false, message: 'Unauthorized' };
+      return { success: false, message: "Unauthorized" };
     }
 
     const { data: user, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
+      .from("profiles")
+      .select("*")
+      .eq("id", userId)
       .single();
 
     if (error) {
@@ -417,26 +439,30 @@ export const adminService = {
     }
 
     const { data: moodLogs } = await supabase
-      .from('mood_entries')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
+      .from("mood_entries")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
       .limit(50);
 
     const { data: sosAlerts } = await supabase
-      .from('sos_alerts')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
+      .from("sos_alerts")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
 
     const { data: trustedContacts } = await supabase
-      .from('trusted_contacts')
-      .select('*')
-      .eq('user_id', userId);
+      .from("trusted_contacts")
+      .select("*")
+      .eq("user_id", userId);
 
-    const avgMood = moodLogs && moodLogs.length > 0
-      ? (moodLogs.reduce((sum, log) => sum + log.mood_level, 0) / moodLogs.length).toFixed(2)
-      : '0';
+    const avgMood =
+      moodLogs && moodLogs.length > 0
+        ? (
+            moodLogs.reduce((sum, log) => sum + log.mood_level, 0) /
+            moodLogs.length
+          ).toFixed(2)
+        : "0";
 
     return {
       success: true,
@@ -450,69 +476,75 @@ export const adminService = {
         total_moods: moodLogs?.length || 0,
         total_sos: sosAlerts?.length || 0,
         avg_mood: avgMood,
-      }
+      },
     };
   },
 
   getDashboardSummary: async () => {
     if (!adminService.isValidAdmin()) {
-      return { success: false, message: 'Unauthorized' };
+      return { success: false, message: "Unauthorized" };
     }
 
     const { count: totalUsers } = await supabase
-      .from('profiles')
-      .select('*', { count: 'exact', head: true });
+      .from("profiles")
+      .select("*", { count: "exact", head: true });
 
     const { count: totalMoodLogs } = await supabase
-      .from('mood_entries')
-      .select('*', { count: 'exact', head: true });
+      .from("mood_entries")
+      .select("*", { count: "exact", head: true });
 
     const { count: totalSOSAlerts } = await supabase
-      .from('sos_alerts')
-      .select('*', { count: 'exact', head: true });
+      .from("sos_alerts")
+      .select("*", { count: "exact", head: true });
 
     const { count: activeSOSAlerts } = await supabase
-      .from('sos_alerts')
-      .select('*', { count: 'exact', head: true })
-      .eq('status', 'active');
+      .from("sos_alerts")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "active");
 
     const { count: totalContacts } = await supabase
-      .from('trusted_contacts')
-      .select('*', { count: 'exact', head: true });
+      .from("trusted_contacts")
+      .select("*", { count: "exact", head: true });
 
     const { data: usersWithContacts } = await supabase
-      .from('trusted_contacts')
-      .select('user_id')
+      .from("trusted_contacts")
+      .select("user_id")
       .limit(1000);
-    
-    const uniqueUsersWithContacts = new Set(usersWithContacts?.map(c => c.user_id)).size;
+
+    const uniqueUsersWithContacts = new Set(
+      usersWithContacts?.map((c) => c.user_id)
+    ).size;
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     const { count: todayMoodLogs } = await supabase
-      .from('mood_entries')
-      .select('*', { count: 'exact', head: true })
-      .gte('created_at', today.toISOString());
+      .from("mood_entries")
+      .select("*", { count: "exact", head: true })
+      .gte("created_at", today.toISOString());
 
     const { data: activeToday } = await supabase
-      .from('mood_entries')
-      .select('user_id')
-      .gte('created_at', today.toISOString());
+      .from("mood_entries")
+      .select("user_id")
+      .gte("created_at", today.toISOString());
 
-    const activeUsersToday = new Set(activeToday?.map(m => m.user_id)).size;
+    const activeUsersToday = new Set(activeToday?.map((m) => m.user_id)).size;
 
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
     const { data: recentMoods } = await supabase
-      .from('mood_entries')
-      .select('mood_level')
-      .gte('created_at', sevenDaysAgo.toISOString());
+      .from("mood_entries")
+      .select("mood_level")
+      .gte("created_at", sevenDaysAgo.toISOString());
 
-    const avgMood7Days = recentMoods && recentMoods.length > 0
-      ? (recentMoods.reduce((sum, m) => sum + m.mood_level, 0) / recentMoods.length).toFixed(2)
-      : '0';
+    const avgMood7Days =
+      recentMoods && recentMoods.length > 0
+        ? (
+            recentMoods.reduce((sum, m) => sum + m.mood_level, 0) /
+            recentMoods.length
+          ).toFixed(2)
+        : "0";
 
     return {
       success: true,
@@ -526,32 +558,35 @@ export const adminService = {
         total_contacts: totalContacts || 0,
         users_with_contacts: uniqueUsersWithContacts,
         avg_mood_7days: avgMood7Days,
-      }
+      },
     };
   },
 
   getMoodAnalytics: async () => {
     if (!adminService.isValidAdmin()) {
-      return { success: false, message: 'Unauthorized' };
+      return { success: false, message: "Unauthorized" };
     }
 
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
     const { data: moodData, error } = await supabase
-      .from('mood_entries')
-      .select('*')
-      .gte('created_at', thirtyDaysAgo.toISOString())
-      .order('created_at', { ascending: false });
+      .from("mood_entries")
+      .select("*")
+      .gte("created_at", thirtyDaysAgo.toISOString())
+      .order("created_at", { ascending: false });
 
     if (error) {
       return { success: false, message: error.message };
     }
 
-    const dailyStats: Record<string, { total: number; sum: number; min: number; max: number }> = {};
-    
-    (moodData || []).forEach(entry => {
-      const date = new Date(entry.created_at).toISOString().split('T')[0];
+    const dailyStats: Record<
+      string,
+      { total: number; sum: number; min: number; max: number }
+    > = {};
+
+    (moodData || []).forEach((entry) => {
+      const date = new Date(entry.created_at).toISOString().split("T")[0];
       if (!dailyStats[date]) {
         dailyStats[date] = { total: 0, sum: 0, min: 5, max: 1 };
       }
@@ -571,7 +606,7 @@ export const adminService = {
       }))
       .sort((a, b) => b.date.localeCompare(a.date));
 
-    const uniqueUsers = new Set(moodData?.map(m => m.user_id)).size;
+    const uniqueUsers = new Set(moodData?.map((m) => m.user_id)).size;
 
     return {
       success: true,
@@ -579,22 +614,26 @@ export const adminService = {
       stats: {
         total_users_with_logs: uniqueUsers,
         total_mood_logs: moodData?.length || 0,
-        overall_avg_mood: moodData && moodData.length > 0
-          ? (moodData.reduce((sum, m) => sum + m.mood_level, 0) / moodData.length).toFixed(2)
-          : '0',
-      }
+        overall_avg_mood:
+          moodData && moodData.length > 0
+            ? (
+                moodData.reduce((sum, m) => sum + m.mood_level, 0) /
+                moodData.length
+              ).toFixed(2)
+            : "0",
+      },
     };
   },
 
   getSOSAnalytics: async () => {
     if (!adminService.isValidAdmin()) {
-      return { success: false, message: 'Unauthorized' };
+      return { success: false, message: "Unauthorized" };
     }
 
     const { data: sosData, error } = await supabase
-      .from('sos_alerts')
-      .select('*, profiles(email)')
-      .order('created_at', { ascending: false })
+      .from("sos_alerts")
+      .select("*, profiles(email)")
+      .order("created_at", { ascending: false })
       .limit(100);
 
     if (error) {
@@ -602,24 +641,24 @@ export const adminService = {
     }
 
     const { count: totalAlerts } = await supabase
-      .from('sos_alerts')
-      .select('*', { count: 'exact', head: true });
+      .from("sos_alerts")
+      .select("*", { count: "exact", head: true });
 
     const { count: activeAlerts } = await supabase
-      .from('sos_alerts')
-      .select('*', { count: 'exact', head: true })
-      .eq('status', 'active');
+      .from("sos_alerts")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "active");
 
     const { count: resolvedAlerts } = await supabase
-      .from('sos_alerts')
-      .select('*', { count: 'exact', head: true })
-      .eq('status', 'resolved');
+      .from("sos_alerts")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "resolved");
 
-    const uniqueUsers = new Set(sosData?.map(s => s.user_id)).size;
+    const uniqueUsers = new Set(sosData?.map((s) => s.user_id)).size;
 
-    const alerts = (sosData || []).map(alert => ({
+    const alerts = (sosData || []).map((alert) => ({
       ...alert,
-      user_email: alert.profiles?.email || 'Unknown',
+      user_email: alert.profiles?.email || "Unknown",
     }));
 
     return {
@@ -630,20 +669,20 @@ export const adminService = {
         active_alerts: activeAlerts || 0,
         resolved_alerts: resolvedAlerts || 0,
         users_triggered_sos: uniqueUsers,
-      }
+      },
     };
   },
 };
 
 // Export legacy token functions for backward compatibility
 export const setAuthToken = (token: string) => {
-  localStorage.setItem('authToken', token);
+  localStorage.setItem("authToken", token);
 };
 
 export const getAuthToken = (): string | null => {
-  return localStorage.getItem('authToken');
+  return localStorage.getItem("authToken");
 };
 
 export const clearAuthToken = () => {
-  localStorage.removeItem('authToken');
+  localStorage.removeItem("authToken");
 };

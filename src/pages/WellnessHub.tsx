@@ -1,29 +1,35 @@
-import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Slider } from '@/components/ui/slider';
-import { Textarea } from '@/components/ui/textarea';
-import { Shield, Heart, ArrowLeft, Play, Pause } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import { moodService } from '@/lib/services';
-import { useAuth } from '@/contexts/AuthContext';
-import { toast } from 'sonner';
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Slider } from "@/components/ui/slider";
+import { Textarea } from "@/components/ui/textarea";
+import { Shield, Heart, ArrowLeft, Play, Pause } from "lucide-react";
+import { useState, useEffect } from "react";
+import { moodService } from "@/lib/services";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 export default function WellnessHub() {
   const { user } = useAuth();
   const [currentMood, setCurrentMood] = useState([5]);
-  const [moodNote, setMoodNote] = useState('');
+  const [moodNote, setMoodNote] = useState("");
   const [breathingActive, setBreathingActive] = useState(false);
-  const [breathingPhase, setBreathingPhase] = useState('inhale');
+  const [breathingPhase, setBreathingPhase] = useState("inhale");
   const [breathingCount, setBreathingCount] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
 
   const moodEmojis = {
-    1: { emoji: '😢', label: 'Very Sad', color: 'text-red-500' },
-    2: { emoji: '😟', label: 'Sad', color: 'text-orange-500' },
-    3: { emoji: '😐', label: 'Okay', color: 'text-yellow-500' },
-    4: { emoji: '🙂', label: 'Good', color: 'text-green-500' },
-    5: { emoji: '😊', label: 'Great', color: 'text-blue-500' },
+    1: { emoji: "😢", label: "Very Sad", color: "text-red-500" },
+    2: { emoji: "😟", label: "Sad", color: "text-orange-500" },
+    3: { emoji: "😐", label: "Okay", color: "text-yellow-500" },
+    4: { emoji: "🙂", label: "Good", color: "text-green-500" },
+    5: { emoji: "😊", label: "Great", color: "text-blue-500" },
   };
 
   const getCurrentMoodData = () => {
@@ -35,10 +41,12 @@ export default function WellnessHub() {
     let interval: NodeJS.Timeout;
     if (breathingActive) {
       interval = setInterval(() => {
-        setBreathingCount(prev => {
+        setBreathingCount((prev) => {
           const newCount = prev + 1;
           if (newCount % 8 === 0) {
-            setBreathingPhase(breathingPhase === 'inhale' ? 'exhale' : 'inhale');
+            setBreathingPhase(
+              breathingPhase === "inhale" ? "exhale" : "inhale"
+            );
           }
           return newCount;
         });
@@ -51,7 +59,7 @@ export default function WellnessHub() {
     setBreathingActive(!breathingActive);
     if (!breathingActive) {
       setBreathingCount(0);
-      setBreathingPhase('inhale');
+      setBreathingPhase("inhale");
     }
   };
 
@@ -60,8 +68,8 @@ export default function WellnessHub() {
     try {
       // Check if user is logged in using Supabase auth
       if (!user) {
-        toast.error('Not Logged In', {
-          description: 'Please log in to save your mood.',
+        toast.error("Not Logged In", {
+          description: "Please log in to save your mood.",
         });
         setIsSaving(false);
         return;
@@ -69,9 +77,14 @@ export default function WellnessHub() {
 
       const moodData = getCurrentMoodData();
       const moodLevel = Math.round(currentMood[0]);
-      
-      console.log('Saving mood:', { moodLevel, emoji: moodData.emoji, label: moodData.label, notes: moodNote });
-      
+
+      console.log("Saving mood:", {
+        moodLevel,
+        emoji: moodData.emoji,
+        label: moodData.label,
+        notes: moodNote,
+      });
+
       const response = await moodService.saveMoodLog(
         moodLevel,
         moodData.emoji,
@@ -79,21 +92,23 @@ export default function WellnessHub() {
         moodNote || undefined
       );
 
-      console.log('Mood save response:', response);
+      console.log("Mood save response:", response);
 
       if (response.success) {
-        toast.success('Mood Saved!', {
+        toast.success("Mood Saved!", {
           description: `Your ${moodData.label} mood has been logged successfully.`,
         });
-        setMoodNote('');
+        setMoodNote("");
         setCurrentMood([5]); // Reset to default
       } else {
-        throw new Error(response.message || 'Failed to save mood');
+        throw new Error(response.message || "Failed to save mood");
       }
     } catch (error: any) {
-      console.error('Error saving mood:', error);
-      toast.error('Error Saving Mood', {
-        description: error.message || 'Please try again later. Make sure you are logged in.',
+      console.error("Error saving mood:", error);
+      toast.error("Error Saving Mood", {
+        description:
+          error.message ||
+          "Please try again later. Make sure you are logged in.",
       });
     } finally {
       setIsSaving(false);
@@ -109,18 +124,25 @@ export default function WellnessHub() {
             <Link to="/" className="flex items-center space-x-2">
               <ArrowLeft className="h-5 w-5 text-gray-600" />
               <Shield className="h-8 w-8 text-blue-600" />
-              <span className="text-2xl font-bold text-gray-900">SafeSpace</span>
+              <span className="text-2xl font-bold text-gray-900">
+                SafeSpace
+              </span>
             </Link>
-            <h1 className="text-xl font-semibold text-gray-900">Wellness Hub</h1>
+            <h1 className="text-xl font-semibold text-gray-900">
+              Wellness Hub
+            </h1>
           </div>
         </div>
       </nav>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Your Wellness Matters</h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            Your Wellness Matters
+          </h2>
           <p className="text-lg text-gray-600">
-            Take care of your mental health with our wellness tools and exercises
+            Take care of your mental health with our wellness tools and
+            exercises
           </p>
         </div>
 
@@ -144,7 +166,7 @@ export default function WellnessHub() {
                 {getCurrentMoodData().label}
               </p>
             </div>
-            
+
             <div className="mb-6">
               <Slider
                 value={currentMood}
@@ -170,8 +192,12 @@ export default function WellnessHub() {
               className="mb-4"
             />
 
-            <Button onClick={saveMoodLog} className="w-full" disabled={isSaving}>
-              {isSaving ? 'Saving...' : 'Save Mood Log'}
+            <Button
+              onClick={saveMoodLog}
+              className="w-full"
+              disabled={isSaving}
+            >
+              {isSaving ? "Saving..." : "Save Mood Log"}
             </Button>
           </CardContent>
         </Card>
@@ -191,14 +217,22 @@ export default function WellnessHub() {
           </CardHeader>
           <CardContent>
             <div className="text-center mb-6">
-              <div className={`w-32 h-32 mx-auto rounded-full border-4 border-blue-500 flex items-center justify-center transition-all duration-500 ${
-                breathingActive 
-                  ? (breathingPhase === 'inhale' ? 'scale-110 bg-blue-100' : 'scale-90 bg-blue-50')
-                  : 'bg-gray-50'
-              }`}>
+              <div
+                className={`w-32 h-32 mx-auto rounded-full border-4 border-blue-500 flex items-center justify-center transition-all duration-500 ${
+                  breathingActive
+                    ? breathingPhase === "inhale"
+                      ? "scale-110 bg-blue-100"
+                      : "scale-90 bg-blue-50"
+                    : "bg-gray-50"
+                }`}
+              >
                 <div className="text-center">
                   <div className="text-2xl font-bold text-blue-600">
-                    {breathingActive ? (breathingPhase === 'inhale' ? 'Inhale' : 'Exhale') : 'Ready'}
+                    {breathingActive
+                      ? breathingPhase === "inhale"
+                        ? "Inhale"
+                        : "Exhale"
+                      : "Ready"}
                   </div>
                   {breathingActive && (
                     <div className="text-sm text-gray-600">
@@ -210,11 +244,7 @@ export default function WellnessHub() {
             </div>
 
             <div className="text-center mb-6">
-              <Button
-                onClick={toggleBreathing}
-                size="lg"
-                className="w-full"
-              >
+              <Button onClick={toggleBreathing} size="lg" className="w-full">
                 {breathingActive ? (
                   <>
                     <Pause className="h-5 w-5 mr-2" />
@@ -230,8 +260,12 @@ export default function WellnessHub() {
             </div>
 
             <div className="text-sm text-gray-600 text-center">
-              <p className="mb-2">Follow the circle: Inhale as it grows, exhale as it shrinks</p>
-              <p>Inhale for 4 seconds → Hold for 4 → Exhale for 4 → Hold for 4</p>
+              <p className="mb-2">
+                Follow the circle: Inhale as it grows, exhale as it shrinks
+              </p>
+              <p>
+                Inhale for 4 seconds → Hold for 4 → Exhale for 4 → Hold for 4
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -241,7 +275,9 @@ export default function WellnessHub() {
           <Card className="hover:shadow-lg transition-shadow">
             <CardHeader>
               <CardTitle>Mindfulness Sessions</CardTitle>
-              <CardDescription>Short meditation practices for stress relief</CardDescription>
+              <CardDescription>
+                Short meditation practices for stress relief
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
@@ -261,7 +297,9 @@ export default function WellnessHub() {
           <Card className="hover:shadow-lg transition-shadow">
             <CardHeader>
               <CardTitle>Positive Affirmations</CardTitle>
-              <CardDescription>Daily reminders and coping strategies</CardDescription>
+              <CardDescription>
+                Daily reminders and coping strategies
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
@@ -281,7 +319,9 @@ export default function WellnessHub() {
           <Card className="hover:shadow-lg transition-shadow">
             <CardHeader>
               <CardTitle>Sleep & Wellness</CardTitle>
-              <CardDescription>Healthy routines for better rest</CardDescription>
+              <CardDescription>
+                Healthy routines for better rest
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
@@ -301,7 +341,9 @@ export default function WellnessHub() {
           <Card className="hover:shadow-lg transition-shadow">
             <CardHeader>
               <CardTitle>Stress Management</CardTitle>
-              <CardDescription>Tools for academic and social pressure</CardDescription>
+              <CardDescription>
+                Tools for academic and social pressure
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
@@ -327,14 +369,17 @@ export default function WellnessHub() {
           <CardContent>
             <div className="grid md:grid-cols-2 gap-4">
               <Link to="/resources">
-                <Button variant="outline" className="w-full border-blue-300 text-blue-700 hover:bg-blue-100">
+                <Button
+                  variant="outline"
+                  className="w-full border-blue-300 text-blue-700 hover:bg-blue-100"
+                >
                   📚 Browse Resources
                 </Button>
               </Link>
               <Button
                 variant="outline"
                 className="border-blue-300 text-blue-700 hover:bg-blue-100"
-                onClick={() => window.open('tel:988')}
+                onClick={() => window.open("tel:988")}
               >
                 📞 Crisis Helpline
               </Button>

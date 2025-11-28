@@ -1,17 +1,26 @@
-import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { MessageCircle, X, Send, Smile, Frown, Meh, Bot, User } from 'lucide-react';
-import { toast } from 'sonner';
-import { NODE_API_URL } from '@/lib/api';
+import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  MessageCircle,
+  X,
+  Send,
+  Smile,
+  Frown,
+  Meh,
+  Bot,
+  User,
+} from "lucide-react";
+import { toast } from "sonner";
+import { NODE_API_URL } from "@/lib/api";
 
 interface Message {
   id: string;
   text: string;
-  sender: 'user' | 'bot';
+  sender: "user" | "bot";
   timestamp: Date;
   suggestions?: string[];
   quickActions?: Array<{ label: string; action: string }>;
@@ -21,7 +30,7 @@ interface ChatbotResponse {
   success: boolean;
   reply: string;
   intent: string;
-  mood: 'happy' | 'neutral' | 'upset' | 'frustrated' | 'confused';
+  mood: "happy" | "neutral" | "upset" | "frustrated" | "confused";
   suggestions?: string[];
   quickActions?: Array<{ label: string; action: string }>;
 }
@@ -30,27 +39,29 @@ export default function ChatbotAssistant() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
-      id: '1',
-      text: 'Hello! 👋 I\'m your SafeSpace assistant. I\'m here to help you stay safe and feel supported. How can I assist you today?',
-      sender: 'bot',
+      id: "1",
+      text: "Hello! 👋 I'm your SafeSpace assistant. I'm here to help you stay safe and feel supported. How can I assist you today?",
+      sender: "bot",
       timestamp: new Date(),
       suggestions: [
-        'Show me safety features',
-        'I need wellness support',
-        'How do I use this app?',
-        'I want to report an issue'
-      ]
-    }
+        "Show me safety features",
+        "I need wellness support",
+        "How do I use this app?",
+        "I want to report an issue",
+      ],
+    },
   ]);
-  const [inputMessage, setInputMessage] = useState('');
+  const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [currentMood, setCurrentMood] = useState<'happy' | 'neutral' | 'upset' | 'frustrated' | 'confused'>('neutral');
+  const [currentMood, setCurrentMood] = useState<
+    "happy" | "neutral" | "upset" | "frustrated" | "confused"
+  >("neutral");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
   // Auto-scroll to bottom when new messages arrive
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(() => {
@@ -59,12 +70,12 @@ export default function ChatbotAssistant() {
 
   const getMoodIcon = () => {
     switch (currentMood) {
-      case 'happy':
+      case "happy":
         return <Smile className="h-4 w-4 text-green-600" />;
-      case 'upset':
-      case 'frustrated':
+      case "upset":
+      case "frustrated":
         return <Frown className="h-4 w-4 text-red-600" />;
-      case 'confused':
+      case "confused":
         return <Meh className="h-4 w-4 text-yellow-600" />;
       default:
         return <Meh className="h-4 w-4 text-blue-600" />;
@@ -73,16 +84,16 @@ export default function ChatbotAssistant() {
 
   const getMoodLabel = () => {
     switch (currentMood) {
-      case 'happy':
-        return 'Positive';
-      case 'upset':
-        return 'Needs Support';
-      case 'frustrated':
-        return 'Frustrated';
-      case 'confused':
-        return 'Seeking Help';
+      case "happy":
+        return "Positive";
+      case "upset":
+        return "Needs Support";
+      case "frustrated":
+        return "Frustrated";
+      case "confused":
+        return "Seeking Help";
       default:
-        return 'Neutral';
+        return "Neutral";
     }
   };
 
@@ -94,22 +105,22 @@ export default function ChatbotAssistant() {
     const userMessage: Message = {
       id: Date.now().toString(),
       text: messageText,
-      sender: 'user',
-      timestamp: new Date()
+      sender: "user",
+      timestamp: new Date(),
     };
-    setMessages(prev => [...prev, userMessage]);
-    setInputMessage('');
+    setMessages((prev) => [...prev, userMessage]);
+    setInputMessage("");
     setIsLoading(true);
 
     try {
       // Call chatbot API
       const response = await fetch(`${NODE_API_URL}/chatbot`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: messageText,
-          conversationHistory: messages.slice(-5) // Send last 5 messages for context
-        })
+          conversationHistory: messages.slice(-5), // Send last 5 messages for context
+        }),
       });
 
       const data: ChatbotResponse = await response.json();
@@ -122,47 +133,47 @@ export default function ChatbotAssistant() {
         const botMessage: Message = {
           id: (Date.now() + 1).toString(),
           text: data.reply,
-          sender: 'bot',
+          sender: "bot",
           timestamp: new Date(),
           suggestions: data.suggestions,
-          quickActions: data.quickActions
+          quickActions: data.quickActions,
         };
-        setMessages(prev => [...prev, botMessage]);
+        setMessages((prev) => [...prev, botMessage]);
       } else {
-        throw new Error('Failed to get response');
+        throw new Error("Failed to get response");
       }
     } catch (error) {
-      console.error('Chatbot error:', error);
-      toast.error('Failed to connect', {
-        description: 'Could not reach chatbot service. Please try again.'
+      console.error("Chatbot error:", error);
+      toast.error("Failed to connect", {
+        description: "Could not reach chatbot service. Please try again.",
       });
 
       // Add error message
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: 'Sorry, I\'m having trouble connecting right now. Please try again in a moment.',
-        sender: 'bot',
-        timestamp: new Date()
+        text: "Sorry, I'm having trouble connecting right now. Please try again in a moment.",
+        sender: "bot",
+        timestamp: new Date(),
       };
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages((prev) => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleQuickAction = (action: string) => {
-    console.log('🔵 Quick Action clicked:', action);
-    
-    toast.success('Navigating...', {
-      description: `Taking you to ${action}`
+    console.log("🔵 Quick Action clicked:", action);
+
+    toast.success("Navigating...", {
+      description: `Taking you to ${action}`,
     });
-    
+
     // Close chat and navigate
     setIsOpen(false);
-    
+
     // Use setTimeout to ensure state updates before navigation
     setTimeout(() => {
-      console.log('🔵 Navigating to:', action);
+      console.log("🔵 Navigating to:", action);
       navigate(action);
     }, 100);
   };
@@ -205,7 +216,7 @@ export default function ChatbotAssistant() {
               <X className="h-4 w-4" />
             </Button>
           </div>
-          
+
           {/* Mood Indicator */}
           <div className="flex items-center space-x-2 mt-2 bg-white/20 rounded-full px-3 py-1 w-fit">
             {getMoodIcon()}
@@ -218,21 +229,25 @@ export default function ChatbotAssistant() {
           {messages.map((message) => (
             <div key={message.id}>
               <div
-                className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                className={`flex ${
+                  message.sender === "user" ? "justify-end" : "justify-start"
+                }`}
               >
                 <div
                   className={`max-w-[80%] rounded-lg p-3 ${
-                    message.sender === 'user'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white border border-gray-200'
+                    message.sender === "user"
+                      ? "bg-blue-600 text-white"
+                      : "bg-white border border-gray-200"
                   }`}
                 >
                   <div className="flex items-start space-x-2">
-                    {message.sender === 'bot' && (
+                    {message.sender === "bot" && (
                       <Bot className="h-4 w-4 text-purple-600 mt-1 flex-shrink-0" />
                     )}
-                    <p className="text-sm whitespace-pre-wrap">{message.text}</p>
-                    {message.sender === 'user' && (
+                    <p className="text-sm whitespace-pre-wrap">
+                      {message.text}
+                    </p>
+                    {message.sender === "user" && (
                       <User className="h-4 w-4 mt-1 flex-shrink-0" />
                     )}
                   </div>
@@ -286,15 +301,24 @@ export default function ChatbotAssistant() {
                 <div className="flex items-center space-x-2">
                   <Bot className="h-4 w-4 text-purple-600" />
                   <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <div className="w-2 h-2 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <div className="w-2 h-2 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    <div
+                      className="w-2 h-2 bg-purple-600 rounded-full animate-bounce"
+                      style={{ animationDelay: "0ms" }}
+                    />
+                    <div
+                      className="w-2 h-2 bg-purple-600 rounded-full animate-bounce"
+                      style={{ animationDelay: "150ms" }}
+                    />
+                    <div
+                      className="w-2 h-2 bg-purple-600 rounded-full animate-bounce"
+                      style={{ animationDelay: "300ms" }}
+                    />
                   </div>
                 </div>
               </div>
             </div>
           )}
-          
+
           <div ref={messagesEndRef} />
         </CardContent>
 

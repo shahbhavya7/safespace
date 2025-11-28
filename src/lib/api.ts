@@ -2,8 +2,7 @@
 // PHP backend has been replaced with Supabase - see services.ts
 
 // Node.js backend URL for Twilio/SMS functionality
-export const NODE_API_URL =
-  import.meta.env.VITE_NODE_API_URL || "/api";
+export const NODE_API_URL = import.meta.env.VITE_NODE_API_URL || "/api";
 
 // Legacy exports for backward compatibility
 export const setAuthToken = (token: string) => {
@@ -31,13 +30,11 @@ export const apiCall = async (
   endpoint: string,
   options: RequestOptions = {}
 ) => {
-  console.warn('apiCall is deprecated. Use Supabase services from services.ts instead.');
-  
-  const {
-    method = "GET",
-    body = null,
-    customHeaders = {},
-  } = options;
+  console.warn(
+    "apiCall is deprecated. Use Supabase services from services.ts instead."
+  );
+
+  const { method = "GET", body = null, customHeaders = {} } = options;
 
   const headers: HeadersInit = {
     "Content-Type": "application/json",

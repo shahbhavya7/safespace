@@ -1,21 +1,27 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Shield, Mail, Lock, User } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { authService } from '@/lib/services';
-import GoogleAuthButton from '@/components/ui/google-auth-button';
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Shield, Mail, Lock, User } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { authService } from "@/lib/services";
+import GoogleAuthButton from "@/components/ui/google-auth-button";
 
 export default function Register() {
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    confirmPassword: '',
-    firstName: '',
-    lastName: '',
+    email: "",
+    password: "",
+    confirmPassword: "",
+    firstName: "",
+    lastName: "",
   });
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -27,7 +33,7 @@ export default function Register() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (formData.password !== formData.confirmPassword) {
       toast({
         title: "❌ Password Mismatch",
@@ -59,17 +65,18 @@ export default function Register() {
       if (response.success) {
         toast({
           title: "✅ Account Created!",
-          description: "Welcome to SafeSpace! Please check your email to verify your account.",
+          description:
+            "Welcome to SafeSpace! Please check your email to verify your account.",
         });
-        
-        navigate('/login');
+
+        navigate("/login");
       } else {
-        throw new Error(response.message || 'Registration failed');
+        throw new Error(response.message || "Registration failed");
       }
     } catch (error: any) {
       toast({
         title: "❌ Registration Failed",
-        description: error.message || 'Could not create account',
+        description: error.message || "Could not create account",
         variant: "destructive",
       });
     } finally {
@@ -78,7 +85,7 @@ export default function Register() {
   };
 
   const handleGoogleSuccess = (token: string, user: any) => {
-    navigate('/');
+    navigate("/");
   };
 
   return (
@@ -91,7 +98,7 @@ export default function Register() {
           <CardTitle className="text-2xl">Join SafeSpace</CardTitle>
           <CardDescription>Create your account to get started</CardDescription>
         </CardHeader>
-        
+
         <CardContent>
           {/* Google OAuth Button */}
           <div className="mb-6">
@@ -103,7 +110,9 @@ export default function Register() {
               <span className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-2 text-muted-foreground">Or register with email</span>
+              <span className="bg-white px-2 text-muted-foreground">
+                Or register with email
+              </span>
             </div>
           </div>
 
@@ -195,13 +204,16 @@ export default function Register() {
             </div>
 
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Creating account...' : 'Create Account'}
+              {isLoading ? "Creating account..." : "Create Account"}
             </Button>
           </form>
 
           <div className="mt-6 text-center text-sm">
             <span className="text-gray-600">Already have an account? </span>
-            <Link to="/login" className="text-blue-600 hover:underline font-semibold">
+            <Link
+              to="/login"
+              className="text-blue-600 hover:underline font-semibold"
+            >
               Sign in
             </Link>
           </div>
