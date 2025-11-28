@@ -271,22 +271,21 @@ export default function Profile() {
               <Button
                 variant="outline"
                 size="sm"
-                  onClick={() => isEditing ? handleSave() : setIsEditing(true)}
-                  disabled={isLoading}
-                >
-                  {isEditing ? (
-                    <>
-                      <Save className="h-4 w-4 mr-2" />
-                      {isLoading ? 'Saving...' : 'Save Changes'}
-                    </>
-                  ) : (
-                    <>
-                      <Edit className="h-4 w-4 mr-2" />
-                      Edit Profile
-                    </>
-                  )}
-                </Button>
-              )}
+                onClick={() => isEditing ? handleSave() : setIsEditing(true)}
+                disabled={isLoading}
+              >
+                {isEditing ? (
+                  <>
+                    <Save className="h-4 w-4 mr-2" />
+                    {isLoading ? 'Saving...' : 'Save Changes'}
+                  </>
+                ) : (
+                  <>
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit Profile
+                  </>
+                )}
+              </Button>
             </CardTitle>
           </CardHeader>
           <CardContent>
