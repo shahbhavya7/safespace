@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,7 +6,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { Shield, Mail, Lock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { apiCall } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
 import GoogleAuthButton from '@/components/ui/google-auth-button';
 
 export default function Login() {
@@ -15,31 +16,37 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (!loading && user) {
+      toast({
+        title: "✅ Welcome back!",
+        description: `Signed in as ${user.email}`,
+      });
+      navigate('/');
+    }
+  }, [user, loading, navigate, toast]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      const response = await apiCall('auth.php?action=login', {
-        method: 'POST',
-        requiresAuth: false,
-        body: { email, password }
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
 
-      if (response.success) {
-        localStorage.setItem('authToken', response.token);
-        localStorage.setItem('user', JSON.stringify(response.user));
-        
-        toast({
-          title: "✅ Login Successful",
-          description: `Welcome back, ${response.user.first_name}!`,
-        });
-        
-        navigate('/');
-      } else {
-        throw new Error(response.message || 'Login failed');
-      }
+      if (error) throw error;
+
+      toast({
+        title: "✅ Login Successful",
+        description: `Welcome back!`,
+      });
+      
+      navigate('/');
     } catch (error: any) {
       toast({
         title: "❌ Login Failed",
@@ -51,9 +58,14 @@ export default function Login() {
     }
   };
 
-  const handleGoogleSuccess = (token: string, user: any) => {
-    navigate('/');
-  };
+  // Show loading while checking auth
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white flex items-center justify-center p-4">
@@ -69,7 +81,7 @@ export default function Login() {
         <CardContent>
           {/* Google OAuth Button */}
           <div className="mb-6">
-            <GoogleAuthButton onSuccess={handleGoogleSuccess} mode="login" />
+            <GoogleAuthButton mode="login" />
           </div>
 
           <div className="relative mb-6">
