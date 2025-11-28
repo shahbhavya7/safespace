@@ -1,21 +1,24 @@
-import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/lib/supabase";
 
 interface GoogleAuthButtonProps {
   onSuccess?: (user: any) => void;
-  mode?: 'login' | 'register';
+  mode?: "login" | "register";
 }
 
-export default function GoogleAuthButton({ onSuccess, mode = 'login' }: GoogleAuthButtonProps) {
+export default function GoogleAuthButton({
+  onSuccess,
+  mode = "login",
+}: GoogleAuthButtonProps) {
   const { toast } = useToast();
   const navigate = useNavigate();
 
   const handleGoogleLogin = async () => {
     try {
       const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
+        provider: "google",
         options: {
           redirectTo: window.location.origin,
         },
@@ -27,12 +30,11 @@ export default function GoogleAuthButton({ onSuccess, mode = 'login' }: GoogleAu
 
       // The redirect will happen automatically
       // After redirect, the session will be handled in App.tsx or a auth context
-      
     } catch (error: any) {
-      console.error('Google auth error:', error);
+      console.error("Google auth error:", error);
       toast({
         title: "❌ Authentication Failed",
-        description: error.message || 'Failed to authenticate with Google',
+        description: error.message || "Failed to authenticate with Google",
         variant: "destructive",
       });
     }
@@ -64,7 +66,7 @@ export default function GoogleAuthButton({ onSuccess, mode = 'login' }: GoogleAu
             d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
           />
         </svg>
-        {mode === 'login' ? 'Sign in with Google' : 'Sign up with Google'}
+        {mode === "login" ? "Sign in with Google" : "Sign up with Google"}
       </Button>
     </div>
   );

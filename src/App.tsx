@@ -1,20 +1,20 @@
-import { Toaster } from '@/components/ui/sonner';
-import { TooltipProvider } from '@/components/ui/tooltip';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from '@/contexts/AuthContext';
-import Index from './pages/Index';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import SafetyHub from './pages/SafetyHub';
-import WellnessHub from './pages/WellnessHub';
-import Resources from './pages/Resources';
-import SecurityDirectory from './pages/SecurityDirectory';
-import Profile from './pages/Profile';
-import Admin from './pages/Admin';
-import SelfHelpGuides from './pages/self_help_guides';
-import NotFound from './pages/NotFound';
-import ChatbotAssistant from './components/ChatbotAssistant';
+import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
+import Index from "./pages/Index";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import SafetyHub from "./pages/SafetyHub";
+import WellnessHub from "./pages/WellnessHub";
+import Resources from "./pages/Resources";
+import SecurityDirectory from "./pages/SecurityDirectory";
+import Profile from "./pages/Profile";
+import Admin from "./pages/Admin";
+import SelfHelpGuides from "./pages/self_help_guides";
+import NotFound from "./pages/NotFound";
+import ChatbotAssistant from "./components/ChatbotAssistant";
 
 const queryClient = new QueryClient();
 

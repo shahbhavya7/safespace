@@ -3,50 +3,21 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Shield, Heart, BookOpen, Phone, User, MapPin, LogOut } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import { userService, authService } from '@/lib/services';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function Index() {
-  const [user, setUser] = useState<any>(null);
+  const { user, signOut, loading } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    // Load user from localStorage
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (e) {
-        console.error('Failed to parse user data:', e);
-      }
-    }
-
-    // Send activity heartbeat if user is logged in
-    const sendHeartbeat = async () => {
-      if (authService.isAuthenticated()) {
-        try {
-          await userService.updateLastActive();
-        } catch (e) {
-          console.error('Failed to update activity:', e);
-        }
-      }
-    };
-
-    // Send heartbeat immediately
-    sendHeartbeat();
-
-    // Send heartbeat every 60 seconds
-    const heartbeatInterval = setInterval(sendHeartbeat, 60000);
-
-    return () => clearInterval(heartbeatInterval);
-  }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('user');
-    setUser(null);
+  const handleLogout = async () => {
+    await signOut();
     navigate('/');
   };
+
+  // Get user display info from Supabase user metadata
+  const userName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || '';
+  const userAvatar = user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '';
+  const userInitials = userName ? userName.split(' ').map((n: string) => n[0]).join('').toUpperCase() : 'U';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white">
@@ -69,13 +40,13 @@ export default function Index() {
                 <div className="flex items-center space-x-4 ml-4">
                   <Link to="/profile" className="flex items-center space-x-2 hover:opacity-80">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={user.profile_picture} alt={user.first_name} />
+                      <AvatarImage src={userAvatar} alt={userName} />
                       <AvatarFallback className="bg-blue-100 text-blue-600 text-sm">
-                        {user.first_name?.[0]}{user.last_name?.[0]}
+                        {userInitials}
                       </AvatarFallback>
                     </Avatar>
                     <span className="text-sm font-medium text-gray-900">
-                      {user.first_name} {user.last_name}
+                      {userName}
                     </span>
                   </Link>
                   <Button variant="outline" size="sm" onClick={handleLogout}>
@@ -105,7 +76,7 @@ export default function Index() {
             <div className="mb-6 inline-block">
               <div className="bg-blue-50 border border-blue-200 rounded-lg px-6 py-3">
                 <p className="text-lg text-blue-900">
-                  👋 Welcome back, <span className="font-bold">{user.first_name}!</span>
+                  👋 Welcome back, <span className="font-bold">{userName}!</span>
                 </p>
               </div>
             </div>

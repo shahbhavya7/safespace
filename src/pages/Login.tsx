@@ -1,18 +1,24 @@
-import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Label } from '@/components/ui/label';
-import { Shield, Mail, Lock } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/lib/supabase';
-import GoogleAuthButton from '@/components/ui/google-auth-button';
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Shield, Mail, Lock } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabase";
+import GoogleAuthButton from "@/components/ui/google-auth-button";
 
 export default function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -25,7 +31,7 @@ export default function Login() {
         title: "✅ Welcome back!",
         description: `Signed in as ${user.email}`,
       });
-      navigate('/');
+      navigate("/");
     }
   }, [user, loading, navigate, toast]);
 
@@ -45,12 +51,12 @@ export default function Login() {
         title: "✅ Login Successful",
         description: `Welcome back!`,
       });
-      
-      navigate('/');
+
+      navigate("/");
     } catch (error: any) {
       toast({
         title: "❌ Login Failed",
-        description: error.message || 'Invalid email or password',
+        description: error.message || "Invalid email or password",
         variant: "destructive",
       });
     } finally {
@@ -77,7 +83,7 @@ export default function Login() {
           <CardTitle className="text-2xl">Welcome to SafeSpace</CardTitle>
           <CardDescription>Sign in to access your account</CardDescription>
         </CardHeader>
-        
+
         <CardContent>
           {/* Google OAuth Button */}
           <div className="mb-6">
@@ -89,7 +95,9 @@ export default function Login() {
               <span className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-2 text-muted-foreground">Or continue with email</span>
+              <span className="bg-white px-2 text-muted-foreground">
+                Or continue with email
+              </span>
             </div>
           </div>
 
@@ -128,13 +136,16 @@ export default function Login() {
             </div>
 
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Signing in...' : 'Sign In'}
+              {isLoading ? "Signing in..." : "Sign In"}
             </Button>
           </form>
 
           <div className="mt-6 text-center text-sm">
             <span className="text-gray-600">Don't have an account? </span>
-            <Link to="/register" className="text-blue-600 hover:underline font-semibold">
+            <Link
+              to="/register"
+              className="text-blue-600 hover:underline font-semibold"
+            >
               Sign up
             </Link>
           </div>
