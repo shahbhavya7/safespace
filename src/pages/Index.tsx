@@ -1,9 +1,23 @@
-import { Link, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Shield, Heart, BookOpen, Phone, User, MapPin, LogOut } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { Link, useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import {
+  Shield,
+  Heart,
+  BookOpen,
+  Phone,
+  User,
+  MapPin,
+  LogOut,
+} from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Index() {
   const { user, signOut, loading } = useAuth();
@@ -11,13 +25,24 @@ export default function Index() {
 
   const handleLogout = async () => {
     await signOut();
-    navigate('/');
+    navigate("/");
   };
 
   // Get user display info from Supabase user metadata
-  const userName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || '';
-  const userAvatar = user?.user_metadata?.avatar_url || user?.user_metadata?.picture || '';
-  const userInitials = userName ? userName.split(' ').map((n: string) => n[0]).join('').toUpperCase() : 'U';
+  const userName =
+    user?.user_metadata?.full_name ||
+    user?.user_metadata?.name ||
+    user?.email?.split("@")[0] ||
+    "";
+  const userAvatar =
+    user?.user_metadata?.avatar_url || user?.user_metadata?.picture || "";
+  const userInitials = userName
+    ? userName
+        .split(" ")
+        .map((n: string) => n[0])
+        .join("")
+        .toUpperCase()
+    : "U";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white">
@@ -27,18 +52,48 @@ export default function Index() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-2">
               <Shield className="h-8 w-8 text-blue-600" />
-              <span className="text-2xl font-bold text-gray-900">SafeSpace</span>
+              <span className="text-2xl font-bold text-gray-900">
+                SafeSpace
+              </span>
             </div>
             <div className="hidden md:flex items-center space-x-6">
-              <Link to="/safety" className="text-gray-700 hover:text-blue-600 transition-colors">Safety Hub</Link>
-              <Link to="/wellness" className="text-gray-700 hover:text-blue-600 transition-colors">Wellness Hub</Link>
-              <Link to="/resources" className="text-gray-700 hover:text-blue-600 transition-colors">Resources</Link>
-              <Link to="/security" className="text-gray-700 hover:text-blue-600 transition-colors">Security</Link>
-              <Link to="/profile" className="text-gray-700 hover:text-blue-600 transition-colors">Profile</Link>
-              
+              <Link
+                to="/safety"
+                className="text-gray-700 hover:text-blue-600 transition-colors"
+              >
+                Safety Hub
+              </Link>
+              <Link
+                to="/wellness"
+                className="text-gray-700 hover:text-blue-600 transition-colors"
+              >
+                Wellness Hub
+              </Link>
+              <Link
+                to="/resources"
+                className="text-gray-700 hover:text-blue-600 transition-colors"
+              >
+                Resources
+              </Link>
+              <Link
+                to="/security"
+                className="text-gray-700 hover:text-blue-600 transition-colors"
+              >
+                Security
+              </Link>
+              <Link
+                to="/profile"
+                className="text-gray-700 hover:text-blue-600 transition-colors"
+              >
+                Profile
+              </Link>
+
               {user ? (
                 <div className="flex items-center space-x-4 ml-4">
-                  <Link to="/profile" className="flex items-center space-x-2 hover:opacity-80">
+                  <Link
+                    to="/profile"
+                    className="flex items-center space-x-2 hover:opacity-80"
+                  >
                     <Avatar className="h-8 w-8">
                       <AvatarImage src={userAvatar} alt={userName} />
                       <AvatarFallback className="bg-blue-100 text-blue-600 text-sm">
@@ -57,10 +112,14 @@ export default function Index() {
               ) : (
                 <div className="flex items-center space-x-3 ml-4">
                   <Link to="/login">
-                    <Button variant="outline" size="sm">Login</Button>
+                    <Button variant="outline" size="sm">
+                      Login
+                    </Button>
                   </Link>
                   <Link to="/register">
-                    <Button size="sm" className="bg-blue-600 hover:bg-blue-700">Sign Up</Button>
+                    <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                      Sign Up
+                    </Button>
                   </Link>
                 </div>
               )}
@@ -76,7 +135,8 @@ export default function Index() {
             <div className="mb-6 inline-block">
               <div className="bg-blue-50 border border-blue-200 rounded-lg px-6 py-3">
                 <p className="text-lg text-blue-900">
-                  👋 Welcome back, <span className="font-bold">{userName}!</span>
+                  👋 Welcome back,{" "}
+                  <span className="font-bold">{userName}!</span>
                 </p>
               </div>
             </div>
@@ -86,13 +146,17 @@ export default function Index() {
             <span className="block text-blue-600">Matters</span>
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
-            SafeSpace is your comprehensive platform for student safety, mental health support, and wellness resources. 
-            Get help when you need it, access professional support, and prioritize your well-being.
+            SafeSpace is your comprehensive platform for student safety, mental
+            health support, and wellness resources. Get help when you need it,
+            access professional support, and prioritize your well-being.
           </p>
-          
+
           {/* Emergency SOS Button */}
           <Link to="/safety">
-            <Button size="lg" className="bg-red-600 hover:bg-red-700 text-white px-8 py-4 text-lg font-semibold mb-8">
+            <Button
+              size="lg"
+              className="bg-red-600 hover:bg-red-700 text-white px-8 py-4 text-lg font-semibold mb-8"
+            >
               🚨 Emergency SOS
             </Button>
           </Link>
@@ -105,7 +169,9 @@ export default function Index() {
               <CardHeader className="text-center">
                 <Heart className="h-12 w-12 text-blue-600 mx-auto mb-4 group-hover:scale-110 transition-transform" />
                 <CardTitle>Stress Relief</CardTitle>
-                <CardDescription>Guided breathing & mindfulness</CardDescription>
+                <CardDescription>
+                  Guided breathing & mindfulness
+                </CardDescription>
               </CardHeader>
             </Card>
           </Link>
@@ -143,7 +209,9 @@ export default function Index() {
 
         {/* Personas Section */}
         <div className="bg-white rounded-lg shadow-sm p-8 mb-16">
-          <h2 className="text-3xl font-bold text-center text-gray-900 mb-8">How SafeSpace Helps You</h2>
+          <h2 className="text-3xl font-bold text-center text-gray-900 mb-8">
+            How SafeSpace Helps You
+          </h2>
           <div className="grid md:grid-cols-3 gap-8">
             <div className="text-center">
               <div className="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
@@ -151,8 +219,8 @@ export default function Index() {
               </div>
               <h3 className="text-xl font-semibold mb-3">Safety First</h3>
               <p className="text-gray-600">
-                Emergency SOS, live location sharing, safe route navigation, and campus security contacts 
-                to keep you protected 24/7.
+                Emergency SOS, live location sharing, safe route navigation, and
+                campus security contacts to keep you protected 24/7.
               </p>
             </div>
 
@@ -162,8 +230,9 @@ export default function Index() {
               </div>
               <h3 className="text-xl font-semibold mb-3">Mental Wellness</h3>
               <p className="text-gray-600">
-                Mood tracking, guided breathing exercises, mindfulness sessions, and coping strategies 
-                for stress, anxiety, and academic pressure.
+                Mood tracking, guided breathing exercises, mindfulness sessions,
+                and coping strategies for stress, anxiety, and academic
+                pressure.
               </p>
             </div>
 
@@ -171,10 +240,13 @@ export default function Index() {
               <div className="bg-purple-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
                 <BookOpen className="h-8 w-8 text-purple-600" />
               </div>
-              <h3 className="text-xl font-semibold mb-3">Professional Support</h3>
+              <h3 className="text-xl font-semibold mb-3">
+                Professional Support
+              </h3>
               <p className="text-gray-600">
-                Direct access to campus counselors, appointment booking, educational resources, 
-                and 24/7 crisis helplines when you need professional help.
+                Direct access to campus counselors, appointment booking,
+                educational resources, and 24/7 crisis helplines when you need
+                professional help.
               </p>
             </div>
           </div>
@@ -227,7 +299,9 @@ export default function Index() {
             <Shield className="h-6 w-6" />
             <span className="text-xl font-bold">SafeSpace</span>
           </div>
-          <p className="text-gray-400">Your safety and wellness matter. We're here to help, 24/7.</p>
+          <p className="text-gray-400">
+            Your safety and wellness matter. We're here to help, 24/7.
+          </p>
         </div>
       </footer>
     </div>

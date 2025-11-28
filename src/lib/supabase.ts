@@ -98,7 +98,12 @@ export const getTrustedContacts = async (userId: string) => {
 
 export const addTrustedContact = async (
   userId: string,
-  contact: { name: string; phone: string; email?: string; relationship?: string }
+  contact: {
+    name: string;
+    phone: string;
+    email?: string;
+    relationship?: string;
+  }
 ) => {
   const { data, error } = await supabase
     .from("trusted_contacts")
