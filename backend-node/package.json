@@ -1,0 +1,22 @@
+{
+  "name": "safespace-twilio-backend",
+  "version": "3.0.0",
+  "description": "SafeSpace Emergency SOS and Location Sharing Backend with Twilio",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "keywords": ["emergency", "twilio", "sms", "call", "location"],
+  "author": "SafeSpace",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "twilio": "^4.19.0",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}
